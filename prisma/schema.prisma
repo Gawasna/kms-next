@@ -1,0 +1,159 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" // Đảm bảo là postgresql
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js Models (standard boilerplate)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum UserRole {
+  GUEST_ROLE // Dùng để định nghĩa quyền cho khách, không gán cho user thực sự
+  STUDENT
+  LECTURER
+  ADMIN
+}
+
+model User {
+  id               String          @id @default(cuid())
+  name             String?
+  email            String?         @unique
+  emailVerified    DateTime?
+  image            String?
+  passwordHash     String?         // Cần cho CredentialsProvider của NextAuth
+  role             UserRole        @default(STUDENT) // Thêm trường vai trò
+  accounts         Account[]
+  sessions         Session[]
+  knowledgeEntries KnowledgeEntry[] // Mối quan hệ 1-N: Một User có nhiều KnowledgeEntry
+  notifications    Notification[]   // Nếu có bảng Notification liên kết với User (sẽ tạo sau)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ----------------------------------------------------
+// KIMS Core Models (MVP)
+// ----------------------------------------------------
+
+enum KnowledgeEntryStatus {
+  DRAFT          // Bản nháp, chỉ tác giả thấy
+  PENDING_REVIEW // Đã gửi chờ duyệt (dành cho Sinh viên đăng bài)
+  APPROVED       // Đã được duyệt, hiển thị theo quyền
+  REJECTED       // Bị từ chối (Admin thay đổi trạng thái, có thể xóa hoặc chuyển về DRAFT)
+  HIDDEN         // Bị ẩn bởi Admin/Giảng viên (chỉ Admin/Giảng viên sở hữu thấy)
+}
+
+enum AccessLevel {
+  PUBLIC          // Công khai: Guest, Student, Lecturer, Admin đều thấy
+  STUDENT_ONLY    // Chỉ Sinh viên: Student, Lecturer, Admin thấy
+  LECTURER_ONLY   // Chỉ Giảng viên: Lecturer, Admin thấy
+  PRIVATE         // Ẩn: Chỉ tác giả (Lecturer/Admin) hoặc Admin thấy
+}
+
+model KnowledgeEntry {
+  id              String             @id @default(uuid())
+  title           String
+  description     String?            // Mô tả ngắn gọn (bổ sung cho tìm kiếm, hiển thị)
+  content         String             @db.Text // Nội dung chi tiết (Markdown/Rich Text HTML)
+
+  // Thông tin file đính kèm
+  fileName        String?            // Tên file gốc (ví dụ: "bai_giang_phan_quyen.pdf")
+  fileSize        Int?               // Kích thước file (bytes)
+  fileMimeType    String?            // Loại MIME của file (ví dụ: "application/pdf")
+  fileStorageUrl  String?            // URL tới file trên dịch vụ lưu trữ (Supabase Storage)
+
+  author          User               @relation(fields: [authorId], references: [id])
+  authorId        String
+
+  status          KnowledgeEntryStatus @default(DRAFT) // Trạng thái của tài liệu
+  accessLevel     AccessLevel        @default(PRIVATE) // Mức độ truy cập
+
+  // Thuộc tính về tổ chức
+  category        Category?          @relation(fields: [categoryId], references: [id])
+  categoryId      String?
+  tags            Tag[]              // Mối quan hệ N-M với Tag
+
+  // Thống kê cơ bản
+  viewsCount      Int                @default(0)
+  downloadsCount  Int                @default(0)
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // Indexing để tối ưu tìm kiếm và truy vấn
+  @@index([authorId, status])
+  @@index([accessLevel, status])
+  @@index([title])
+  @@index([categoryId])
+  @@index([createdAt])
+  // @@fulltext([title, description, content]) // Bỏ comment nếu dùng PostgreSQL full-text search
+}
+
+model Category {
+  id              String           @id @default(uuid())
+  name            String           @unique
+  description     String?
+  knowledgeEntries KnowledgeEntry[]
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model Tag {
+  id               String           @id @default(uuid())
+  name             String           @unique
+  knowledgeEntries KnowledgeEntry[]
+
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+// Optional: Notification model if you plan to implement this in MVP
+model Notification {
+  id              String @id @default(uuid())
+  title           String
+  content         String @db.Text
+  isPublic        Boolean @default(false) // If true, visible to everyone including Guests
+  userId          String? // Optional: if notification is for a specific user
+  user            User?   @relation(fields: [userId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isPublic, createdAt]) // Optimize for public notifications
+  @@index([userId, createdAt])   // Optimize for user-specific notifications
+}

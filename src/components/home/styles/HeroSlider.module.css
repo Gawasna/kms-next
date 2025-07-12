@@ -1,0 +1,49 @@
+/* src/components/home/HeroSlider.module.css */
+
+.heroSliderContainer {
+  width: 800px;
+  
+  overflow: hidden; /* Đảm bảo không có thanh cuộn không mong muốn */
+}
+
+/* Các selector cho Ant Design Carousel để đảm bảo chiều cao được truyền xuống */
+.heroSliderContainer :global(.ant-carousel .slick-slider) {
+  height: 100%;
+}
+
+.heroSliderContainer :global(.ant-carousel .slick-list) {
+  height: 100%;
+}
+
+.heroSliderContainer :global(.ant-carousel .slick-track) {
+  height: 100%;
+}
+
+.heroSlideItem {
+  height: 100%;
+  min-height: 400px; /* CỰC QUAN TRỌNG để tránh height: 0 ban đầu */
+  position: relative;
+  overflow: hidden;
+}
+/* Tùy chỉnh dấu chấm chỉ thị (dots) nếu muốn */
+.heroSliderContainer :global(.ant-carousel .slick-dots li button) {
+  background: rgba(255, 255, 255, 0.5); /* Màu chấm mặc định */
+}
+
+.heroSliderContainer :global(.ant-carousel .slick-dots li.slick-active button) {
+  background: #fff; /* Màu chấm khi active */
+}
+
+/* Tùy chỉnh mũi tên điều hướng nếu muốn */
+.heroSliderContainer :global(.ant-carousel .slick-prev),
+.heroSliderContainer :global(.ant-carousel .slick-next) {
+  font-size: 30px; /* Kích thước mũi tên */
+  color: white; /* Màu mũi tên */
+  z-index: 1; /* Đảm bảo mũi tên nằm trên ảnh */
+  transition: all 0.3s ease;
+}
+
+.heroSliderContainer :global(.ant-carousel .slick-prev:hover),
+.heroSliderContainer :global(.ant-carousel .slick-next:hover) {
+  color: #ff7e5f; /* Màu mũi tên khi hover */
+}

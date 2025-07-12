@@ -1,0 +1,100 @@
+.searchDropdownContainer {
+  min-width: 300px;
+  max-width: 500px; /* Điều chỉnh chiều rộng tối đa */
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Shadow nhẹ */
+  padding: 8px 0;
+  max-height: 400px; /* Giới hạn chiều cao cho phép cuộn */
+  overflow-y: auto; /* Kích hoạt thanh cuộn khi nội dung quá dài */
+}
+
+.resultsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.resultItem {
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.resultItem:hover {
+  background-color: #f5f5f5; /* Hiệu ứng hover */
+}
+
+.resultLink {
+  display: block; /* Đảm bảo link chiếm toàn bộ item */
+  text-decoration: none; /* Bỏ gạch chân mặc định của link */
+  color: inherit; /* Kế thừa màu chữ */
+}
+
+.resultItemSpace {
+  width: 100%;
+  display: flex; /* Sử dụng flexbox cho layout */
+  align-items: flex-start; /* Căn trên theo chiều dọc */
+}
+
+.thumbnailWrapper {
+  flex-shrink: 0; /* Không cho thumbnail co lại */
+  margin-right: 12px;
+}
+
+.thumbnail {
+  border-radius: 4px; /* Bo góc nhẹ cho thumbnail */
+  max-width: 60px;
+  min-width: 60px; /* Đảm bảo thumbnail có kích thước cố định */
+  max-height: 30px; /* Giới hạn chiều cao của thumbnail */
+  min-height: 30px; /* Đảm bảo thumbnail có chiều cao cố định */
+  object-fit: cover; /* Đảm bảo hình ảnh không bị méo */
+}
+
+.info {
+  flex-grow: 1; /* Cho phép phần info chiếm hết không gian còn lại */
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  display: block;
+  font-size: 14px;
+  color: #333;
+  line-height: 1.2;
+  margin-bottom: 4px;
+  white-space: nowrap; /* Ngăn không cho tiêu đề xuống dòng */
+  overflow: hidden; /* Cắt bớt phần tràn */
+  text-overflow: ellipsis; /* Thêm dấu ba chấm */
+}
+
+.authorDate {
+  display: block;
+  font-size: 12px;
+  color: #888;
+}
+
+.noResults {
+  padding: 16px;
+  text-align: center;
+  color: #999;
+}
+
+.divider {
+  margin: 8px 0 !important; /* Đảm bảo divider có khoảng cách */
+}
+
+.footer {
+  padding: 8px 16px;
+  text-align: center;
+}
+
+.advancedSearchLink {
+  color: #1890ff; /* Màu xanh của Ant Design */
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.advancedSearchLink:hover {
+  text-decoration: underline;
+}

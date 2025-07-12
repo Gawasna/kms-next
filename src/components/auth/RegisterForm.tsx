@@ -1,22 +1,23 @@
-// src/components/auth/LoginForm.tsx
-'use client'; // Đánh dấu là Client Component vì có state và interactivity
+// version: "1.0.0",
+// quick description: Registration form component for user sign-up in a Next.js application
+// CAUTION: Always leave quick description at the top of the file each time update
+'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { z } from 'zod';
-import { loginSchema } from '@/lib/validators/userSchema';
-import { LoginFormInputs } from '@/types/auth';
+import { registerSchema } from '@/lib/validators/userSchema';
+import { RegisterFormInputs } from '@/types/auth';
 
-export default function LoginForm() {
-  const [formData, setFormData] = useState<LoginFormInputs>({ email: '', password: '' });
+export default function RegisterForm() {
+  const [formData, setFormData] = useState<RegisterFormInputs>({ email: '', password: '', confirmPassword: '' });
   const [errors, setErrors] = useState<z.ZodIssue[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Xóa lỗi cho trường hiện tại khi người dùng gõ
-    setErrors(prev => prev.filter(err => err.path[0] !== e.target.name));
+    setErrors(prev => prev.filter(err => err.path[0] !== e.target.name && err.path[0] !== 'confirmPassword'));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,24 +27,21 @@ export default function LoginForm() {
     setMessage(null);
 
     try {
-      // Validate data with Zod
-      loginSchema.parse(formData);
+      registerSchema.parse(formData);
 
-      // Simulate API call
-      console.log('Login form submitted:', formData);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+      console.log('Register form submitted:', formData);
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Simulate success
-      setMessage({ type: 'success', text: 'Đăng nhập thành công! Đang chuyển hướng...' });
-      // In a real app, you would redirect here: router.push('/dashboard');
+      setMessage({ type: 'success', text: 'Đăng ký thành công! Vui lòng đăng nhập.' });
+      setFormData({ email: '', password: '', confirmPassword: '' });
 
     } catch (error) {
       if (error instanceof z.ZodError) {
         setErrors(error.errors);
-        setMessage({ type: 'error', text: 'Vui lòng kiểm tra lại thông tin đăng nhập.' });
+        setMessage({ type: 'error', text: 'Vui lòng kiểm tra lại thông tin đăng ký.' });
       } else {
         setMessage({ type: 'error', text: 'Đã có lỗi xảy ra. Vui lòng thử lại.' });
-        console.error('Login error:', error);
+        console.error('Registration error:', error);
       }
     } finally {
       setLoading(false);
@@ -52,7 +50,7 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="auth-form">
-      <h2 className="form-title">Đăng Nhập</h2>
+      <h2 className="form-title">Đăng Ký</h2>
 
       {message && (
         <div className={`message ${message.type}`}>
@@ -61,14 +59,14 @@ export default function LoginForm() {
       )}
 
       <div className="form-group">
-        <label htmlFor="email">Email</label>
+        <label htmlFor="register-email">Email</label>
         <input
           type="email"
-          id="email"
+          id="register-email"
           name="email"
           value={formData.email}
           onChange={handleChange}
-          placeholder="Email của bạn"
+          placeholder="your@example.com"
           required
         />
         {errors.find(err => err.path[0] === 'email') && (
@@ -79,10 +77,10 @@ export default function LoginForm() {
       </div>
 
       <div className="form-group">
-        <label htmlFor="password">Mật khẩu</label>
+        <label htmlFor="register-password">Mật khẩu</label>
         <input
           type="password"
-          id="password"
+          id="register-password"
           name="password"
           value={formData.password}
           onChange={handleChange}
@@ -96,17 +94,31 @@ export default function LoginForm() {
         )}
       </div>
 
-      <div className="form-links">
-        <Link href="/auth/forgot-password" className="link-text">Quên mật khẩu?</Link>
+      <div className="form-group">
+        <label htmlFor="confirm-password">Xác nhận mật khẩu</label>
+        <input
+          type="password"
+          id="confirm-password"
+          name="confirmPassword"
+          value={formData.confirmPassword}
+          onChange={handleChange}
+          placeholder="••••••••"
+          required
+        />
+        {errors.find(err => err.path[0] === 'confirmPassword') && (
+          <p className="error-message">
+            {errors.find(err => err.path[0] === 'confirmPassword')?.message}
+          </p>
+        )}
       </div>
 
       <button type="submit" className="submit-button" disabled={loading}>
-        {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+        {loading ? 'Đang đăng ký...' : 'Đăng Ký'}
       </button>
 
       <div className="form-footer">
-        Chưa có tài khoản?{' '}
-        <Link href="/auth/register" className="link-text">Đăng ký ngay</Link>
+        Đã có tài khoản?{' '}
+        <Link href="/auth/login" className="link-text">Đăng nhập</Link>
       </div>
     </form>
   );

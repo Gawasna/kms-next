@@ -1,20 +1,23 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+// src/app/page.tsx
+// version: "1.0.0"
+// quick description: Standard homepage for the KIMS application
+// CAUTION: Always leave quick description at the top of the file each time update
 
-export default function Home() {
+import React from 'react';
+import HomePageContent from '@/components/home/HomePage';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Trang Chủ',
+  description: 'Chào mừng bạn đến với KIMS - Hệ thống quản lý tài liệu thông minh của bạn. Khám phá các tính năng mạnh mẽ để quản lý và tổ chức thông tin hiệu quả.',
+  keywords: ['homepage', 'KIMS home', 'quản lý tài liệu', 'hệ thống thông tin', 'document management system'],
+};
+
+export default function HomePage() {
   return (
-    //route to login page ("/auth/login")
-    <div className={styles.container}>
-      <h1 className={styles.title}>Welcome to the Login Page</h1>
-      <p className={styles.description}>
-        Please click the button below to go to the login page.
-      </p>
-      <a href="/auth/login" className={styles.button}>
-        Go to Login Page
-      </a>
-      <p className={styles.footer}>
-        This is a simple prototype for a login page. Please navigate to the login page to proceed.
-      </p>
-    </div>
+    <>
+      {/* HomePageContent sẽ chứa toàn bộ nội dung chính của trang chủ, bao gồm slider, notification và các phần browse */}
+      <HomePageContent />
+    </>
   );
 }

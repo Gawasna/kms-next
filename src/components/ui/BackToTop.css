@@ -1,0 +1,34 @@
+/* src/components/ui/BackToTop.css */
+.back-to-top {
+  position: fixed;
+  bottom: 30px; /* Khoảng cách từ dưới lên */
+  right: 30px; /* Khoảng cách từ phải sang */
+  z-index: 1000; /* Đảm bảo nó nằm trên các phần tử khác */
+  opacity: 0; /* Mặc định ẩn */
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+  border-radius: 50%; /* Tròn */
+  width: 50px; /* Kích thước nút */
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #007bff; /* Màu primary */
+  color: white;
+  font-size: 1.2em; /* Kích thước icon */
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Tùy chỉnh Ant Design Button nếu cần */
+.back-to-top.ant-btn {
+  padding: 0; /* Xóa padding mặc định của Ant Design nếu gây lỗi hiển thị icon */
+}
+
+.back-to-top.ant-btn .anticon {
+    font-size: 1.2em; /* Kích thước icon bên trong Button */
+}

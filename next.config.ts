@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
     // Enable SWC for faster compilation
     forceSwcTransforms: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+    ],
+    dangerouslyAllowSVG: true, // 👈 Bật cho phép SVG từ remote
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
   // Optimize bundle in development
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {

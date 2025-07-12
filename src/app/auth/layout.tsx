@@ -1,41 +1,25 @@
-// Auth layout component for authentication pages
-// Fixed: 2025-07-02 - Removed missing component dependencies and simplified layout
-// Fixed: 2025-07-02 - Added proper imports and created useAuth hook
-
-'use client';
+// src/app/auth/layout.tsx
 import React from 'react';
-import { Layout } from 'antd';
-import './layout.css';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import AntdConfigProvider from '../../components/common/AntdConfigProvider';
+import Link from 'next/link';
 
-const { Header, Content, Footer } = Layout;
+interface AuthLayoutProps {
+  children: React.ReactNode;
+}
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push('/dashboard'); // Redirect to dashboard if authenticated
-    }
-  }, [isAuthenticated, router]);
-
+export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <AntdConfigProvider>
-      <Layout className="auth-layout">
-        <Header className="auth-header">
-          <div className="auth-logo">KIMS Authentication</div>
-        </Header>
-        <Content className="auth-content">
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <Link href="/" className="auth-logo">
+            KIMS
+          </Link>
+          <h1 className="auth-title">Chào mừng bạn trở lại!</h1>
+        </div>
+        <div className="auth-content">
           {children}
-        </Content>
-        <Footer className="auth-footer">
-          KIMS ©2025 Created for authentication prototype
-        </Footer>
-      </Layout>
-    </AntdConfigProvider>
+        </div>
+      </div>
+    </div>
   );
 }

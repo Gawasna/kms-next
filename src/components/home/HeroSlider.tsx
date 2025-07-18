@@ -1,12 +1,9 @@
 // src/components/home/HeroSlider.tsx
-'use client'; // Client Component vì có tương tác với Carousel
-
+'use client';
 import React from 'react';
 import { Carousel } from 'antd';
 import Image from 'next/image';
-
-// Import CSS Module
-import styles from './styles/HeroSlider.module.css';
+import s from './styles/HeroSlider.module.css';
 
 interface Slide {
   id: number;
@@ -23,23 +20,24 @@ const slides: Slide[] = [
 
 export default function HeroSlider() {
   return (
-    <div className={styles.heroSliderContainer}> {/* Áp dụng class container */}
+    <div className={s.heroSliderContainer}>
       <Carousel
-        autoplay // Tự động chuyển slide
-        autoplaySpeed={5000} // Thời gian chuyển slide (5 giây)
-        arrows={true} // Hiển thị mũi tên điều hướng
-        dotPosition="bottom" // Vị trí của các dấu chấm chỉ thị
-        infinite={true} // Vòng lặp vô hạn
+        arrows={true}
+        infinite={true}
+        autoplay={true}
+        autoplaySpeed={5000}
+        effect="fade"
+        dotPosition="bottom"
       >
-        {slides.map(slide => (
-          <div key={slide.id} className={styles.heroSlideItem}> {/* Áp dụng class item */}
+        {slides.map((slide, index) => (
+          <div key={slide.id} className={s.heroSlideItem}>
             <Image
               src={slide.src}
               alt={slide.alt}
-              width={800}
-              height={500}
-              style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-              priority={slide.id === 1}
+              fill
+              style={{ objectFit: 'cover' }}
+              priority={index === 0}
+              sizes="(max-width: 800px) 100vw, 800px"
             />
           </div>
         ))}

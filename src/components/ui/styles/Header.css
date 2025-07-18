@@ -1,0 +1,54 @@
+
+.header-search-bar {
+  flex-grow: 1; /* Cho phép thanh tìm kiếm mở rộng */
+  margin: 0 30px; /* Khoảng cách với logo và nav */
+  max-width: 400px; /* Giới hạn độ rộng */
+}
+/* Ant Design Input.Search styling */
+.ant-input-group-wrapper .ant-input-group-addon {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+}
+.ant-input-group-wrapper .ant-btn {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+  color: white !important;
+}
+.ant-input-group-wrapper .ant-btn:hover {
+  background-color: #0056b3 !important;
+  border-color: #0056b3 !important;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Khoảng cách giữa các mục nav */
+}
+
+.header-auth-link,
+.header-language-link,
+.header-profile-link {
+  color: #333;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  font-size: 0.95em;
+  padding: 5px 10px;
+  
+  border-radius: 4px;
+}
+
+.header-auth-link:hover,
+.header-language-link:hover,
+.header-profile-link:hover {
+  color: #007bff;
+  border-color: #007bff;
+  text-decoration: none;
+}
+
+.header-icon-button {
+  color: #333 !important;
+}
+.header-icon-button:hover {
+  color: #007bff !important;
+}

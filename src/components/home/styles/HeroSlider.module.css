@@ -1,9 +1,13 @@
 /* src/components/home/HeroSlider.module.css */
 
 .heroSliderContainer {
+  overflow: hidden;
+  position: relative;
   width: 800px;
-  
-  overflow: hidden; /* Đảm bảo không có thanh cuộn không mong muốn */
+  margin: 0 auto;
+  max-width: 800px;
+  flex: 0 1 auto;
+  border: var(--bd-thin);
 }
 
 /* Các selector cho Ant Design Carousel để đảm bảo chiều cao được truyền xuống */
@@ -46,4 +50,12 @@
 .heroSliderContainer :global(.ant-carousel .slick-prev:hover),
 .heroSliderContainer :global(.ant-carousel .slick-next:hover) {
   color: #ff7e5f; /* Màu mũi tên khi hover */
+}
+
+/* RESPONSIVE STYLES */
+@media (max-width: 768px) {
+  .heroSliderContainer {
+    width: 100%; /* Chiếm toàn bộ chiều rộng trên màn hình nhỏ */
+    max-width: 100%;
+  }
 }

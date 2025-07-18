@@ -4,8 +4,8 @@ import HeroSlider from './HeroSlider';
 import NotificationBox from './NotificationBox';
 import BrowseSection from './BrowseSection';
 import Link from 'next/link';
+import './styles/Home.css';
 
-// Mock data for browse sections
 const categories = [
   { name: 'Khoa học máy tính', count: 120, slug: 'khoa-hoc-may-tinh' },
   { name: 'Kinh tế & Quản lý', count: 95, slug: 'kinh-te-quan-ly' },

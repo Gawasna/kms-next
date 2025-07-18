@@ -1,15 +1,14 @@
-// src/components/ui/Header.tsx
-'use client'; // Client Component vì có thể có tương tác với search, language, profile dropdown
-
+'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Input, Button, Dropdown, Space, Avatar, MenuProps, Modal } from 'antd';
-import { SearchOutlined, DownOutlined, UserOutlined, BellOutlined, LogoutOutlined, SettingOutlined, CaretDownFilled, CaretUpFilled, UserAddOutlined, BellFilled, GlobalOutlined } from '@ant-design/icons';
-import SearchDropdownResults from './SearchDropdownResults';
+import { SearchOutlined, UserOutlined, LogoutOutlined, SettingOutlined, CaretDownFilled, CaretUpFilled, UserAddOutlined, BellFilled, GlobalOutlined } from '@ant-design/icons';
+import SearchDropdownResults from './SearchDropdownResults'; 
 import { SearchResult } from '@/types/search';
+import s from './styles/Header.module.css'; 
+import c from 'clsx';
 
-// Mock user data for demonstration
-const currentUser = { name: 'Hung Lee', loggedIn: true };
+const currentUser = { name: 'Hung Lee', loggedIn: false, avatarUrl: 'https://api.dicebear.com/7.x/adventurer/svg?seed=HungLee' };
 
 const mockAllResults: SearchResult[] = [
   {
@@ -128,21 +127,24 @@ const profileMenuItems: MenuProps['items'] = [
 ];
 
 export default function Header() {
+  // State để quản lý trạng thái mở/đóng của dropdown profile
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [modal, contextHolder] = Modal.useModal(); // Hook của Ant Design cho Modal
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [modal, contextHolder] = Modal.useModal();
-  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false); // State quản lý hiển thị dropdown tìm kiếm
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]); // State lưu kết quả tìm kiếm
-  const [searchTerm, setSearchTerm] = useState<string>(''); // State lưu giá trị input tìm kiếm
+  // State cho chức năng tìm kiếm
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false); // Quản lý hiển thị dropdown tìm kiếm
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]); // Lưu kết quả tìm kiếm
+  const [searchTerm, setSearchTerm] = useState<string>(''); // Lưu giá trị của input tìm kiếm
 
-  const handleDropdownVisibleChange = (visible: boolean) => {
-    setIsDropdownOpen(visible);
+  // Hàm xử lý khi dropdown profile thay đổi trạng thái hiển thị
+  const handleProfileDropdownVisibleChange = (visible: boolean) => {
+    setIsProfileDropdownOpen(visible);
   };
 
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Hàm xử lý khi input tìm kiếm thay đổi
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    console.log('Search Input Change:', value); // Debug 1
 
     if (value.length >= 2) { // Chỉ tìm kiếm khi có ít nhất 2 ký tự
       // TODO: Trong thực tế, bạn sẽ gọi API tìm kiếm ở đây và cân nhắc dùng Debounce
@@ -151,73 +153,56 @@ export default function Header() {
         result.author.toLowerCase().includes(value.toLowerCase())
       );
       setSearchResults(filteredResults);
-      setIsSearchDropdownOpen(true); // Mở dropdown khi có kết quả
-      console.log('Results Found, opening dropdown:', filteredResults.length); // Debug 2
+      // Mở dropdown chỉ khi có kết quả và term đủ dài
+      setIsSearchDropdownOpen(filteredResults.length > 0);
     } else {
       setSearchResults([]); // Xóa kết quả nếu input rỗng hoặc quá ngắn
       setIsSearchDropdownOpen(false); // Đóng dropdown
-      console.log('Search term too short or empty, closing dropdown.'); // Debug 3
     }
   };
 
+  // Hàm xử lý khi người dùng nhấn Enter hoặc click nút tìm kiếm
   const onSearch = (value: string) => {
     console.log('Tìm kiếm thực hiện:', value);
     // TODO: Bạn có thể chuyển hướng người dùng đến trang kết quả tìm kiếm đầy đủ ở đây
     // router.push(`/search?q=${encodeURIComponent(value)}`);
-    if (value.length === 0) { // Nếu người dùng xóa hết input và nhấn Enter, đóng dropdown
-      setIsSearchDropdownOpen(false);
-      console.log('Tìm kiếm thực hiện:', value);
-    }
+    setIsSearchDropdownOpen(false); // Đóng dropdown sau khi tìm kiếm chính thức
   };
 
-  // Hàm xử lý khi dropdown tìm kiếm mở/đóng
+  // Hàm xử lý khi dropdown tìm kiếm mở/đóng bởi AntD (ví dụ: click ra ngoài)
   const handleSearchDropdownVisibleChange = (visible: boolean) => {
-    // Logic này giúp kiểm soát việc đóng mở dropdown linh hoạt hơn
-    // Ví dụ: chỉ đóng nếu searchTerm rỗng hoặc không có kết quả
-    console.log('Search Dropdown visibility changed by AntD:', visible); // Debug 4
-    if (!visible && (searchTerm === '' || searchResults.length === 0)) {
+    if (!visible) {
       setIsSearchDropdownOpen(false);
-    } else if (visible && searchTerm.length >= 2) {
-      setIsSearchDropdownOpen(true);
     }
-    console.log('isSearchDropdownOpen after AntD change:', isSearchDropdownOpen); // Debug 5
-  };
+    };
 
   // Hàm xử lý khi click vào một kết quả tìm kiếm trong dropdown
   const handleSearchResultClick = (result: SearchResult) => {
     console.log('Clicked search result:', result);
     // TODO: Trong thực tế, bạn sẽ điều hướng đến trang chi tiết tài liệu
     // router.push(`/documents/${result.id}`);
-    setIsSearchDropdownOpen(false); // Đóng dropdown sau khi chọn
-    setSearchTerm(''); // Xóa nội dung tìm kiếm
-    setSearchResults([]); // Xóa kết quả
+    setIsSearchDropdownOpen(false);
+    setSearchTerm(result.title);
+    setSearchResults([]);
   };
 
+  // Hàm xử lý khi chọn ngôn ngữ
   const handleLanguageMenuClick = (e: any) => {
     console.log('Language selected:', e.key);
-    switch (e.key) {
-      case 'vi':
-        modal.warning({
-          title: 'Chức năng chưa sẵn sàng',
-          content: 'Chức năng chuyển đổi ngôn ngữ hiện chưa được triển khai.',
-        });
-        break;
-      case 'en':
-        modal.warning({
-          title: 'Feature not available',
-          content: 'Language switching feature is not implemented yet.',
-        });
-        break;
-    }
+    modal.warning({
+      title: 'Chức năng chưa sẵn sàng',
+      content: 'Chức năng chuyển đổi ngôn ngữ hiện chưa được triển khai.',
+    });
   };
 
+  // Hàm xử lý các hành động trong menu profile/auth
   const handleProfileMenuClick = (e: any) => {
     console.log('Profile action:', e.key);
 
     if (e.key === 'profile') {
-      //router.push('/dashboard/profile'); // dùng next/router
+      // Ví dụ: router.push('/dashboard/profile');
     } else if (e.key === 'settings') {
-      //router.push('/dashboard/settings');
+      // Ví dụ: router.push('/dashboard/settings');
     } else if (e.key === 'logout' && currentUser.loggedIn) {
       modal.confirm({
         title: 'Xác nhận đăng xuất',
@@ -226,115 +211,92 @@ export default function Header() {
         cancelText: 'Hủy',
         onOk: () => {
           console.log('Đăng xuất thành công');
-          //set loggedIn to false in your auth context or state
-          //router.push('/'); // Redirect to home page after logout
+          // TODO: Thực tế: cập nhật trạng thái đăng nhập, xóa token, chuyển hướng
+          // Ví dụ: setLoggedIn(false); router.push('/');
         },
       });
     }
   };
 
   return (
-    <header className="main-header">
-      <div className="header-container">
-        <Link href="/">
-          <span className="header-logo gradient-logo">
-            KIMS
-          </span>
+    <header className={s['main-header']}>
+      {contextHolder}
+
+      {/* Logo Section */}
+      <div className={c(s['logo'],s['gradient-logo'])}>
+        <Link href="/" className={s.logo}>
+          KMS
         </Link>
+      </div>
 
-        <div className="header-search-bar">
-          <Dropdown
-            // Điều khiển việc mở/đóng của dropdown tìm kiếm
-            open={isSearchDropdownOpen && (searchTerm.length >= 2 || searchResults.length > 0)}
-            // Sử dụng dropdownRender để render component tùy chỉnh của bạn
-            dropdownRender={() => (
-              <SearchDropdownResults
-                results={searchResults}
-                searchTerm={searchTerm}
-                onResultClick={handleSearchResultClick}
-              />
-            )}
-            placement="bottomLeft" // Vị trí của dropdown
-            overlayStyle={{ zIndex: 1050 }} // Đảm bảo dropdown nằm trên cùng
-            onOpenChange={handleSearchDropdownVisibleChange} // Xử lý khi trạng thái mở/đóng thay đổi
-          >
-            <Input.Search
-              placeholder="Tìm kiếm tài liệu..."
-              onSearch={onSearch} // Kích hoạt khi nhấn Enter hoặc click nút search
-              onChange={handleSearchInputChange} // Kích hoạt khi nội dung input thay đổi
-              value={searchTerm} // Liên kết giá trị input với state
-              enterButton={<Button icon={<SearchOutlined />} />}
-              size="large"
-            />
-          </Dropdown>
-        </div>
-
-        <nav className="main-nav">
-          {currentUser.loggedIn ? (
-            <>
-              <Button 
-                type="text" 
-                icon={<BellFilled/>} 
-                className="header-icon-button" 
-                size='large'
-                />
-              <Dropdown
-                menu={{ items: profileMenuItems, onClick: handleProfileMenuClick }}
-                onOpenChange={handleDropdownVisibleChange}
-                trigger={['click', 'hover']}
-              >
-                <a onClick={(e) => e.preventDefault()} className="header-profile-link">
-                  <Space
-                    style={{
-                      border: '1px solid #ccc',
-                      padding: '5px 10px',
-                      borderRadius: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Avatar icon={<UserOutlined />} />
-                    {currentUser.name}
-                    {isDropdownOpen ? (
-                      <CaretUpFilled style={{ transition: 'transform 0.1s' }} />
-                    ) : (
-                      <CaretDownFilled style={{ transition: 'transform 0.1s' }} />
-                    )}
-                  </Space>
-                </a>
-              </Dropdown>
-            </>
-          ) : (
-            <>
-                <Dropdown
-                  menu={{ items: authMenuItems }}
-                  trigger={['click']}>
-                  <Button icon={<UserOutlined />} type="primary" className="header-auth-button" />
-                </Dropdown>
-            </>
+      {/* Search Bar Section */}
+      <div className={s['search-section']}>
+        <Dropdown
+          popupRender={() => (
+            <SearchDropdownResults results={searchResults} onResultClick={handleSearchResultClick} searchTerm={''} />
           )}
+          open={isSearchDropdownOpen && searchResults.length > 0}
+          trigger={['click']}
+          onOpenChange={handleSearchDropdownVisibleChange}
+          placement="bottomLeft" 
+          getPopupContainer={(trigger) => trigger.parentNode as HTMLElement}
+        >
+          <Input.Search
+            placeholder="Tìm kiếm tài liệu..."
+            allowClear
+            enterButton={<SearchOutlined />}
+            size="large"
+            value={searchTerm}
+            onChange={handleSearchInputChange}
+            onSearch={onSearch}
+            className={s['search-input']}
+            onFocus={() => {
+              if (searchTerm.length >= 2 && searchResults.length > 0) {
+                setIsSearchDropdownOpen(true);
+              }
+            }}
+          />
+        </Dropdown>
+      </div>
 
-          <Dropdown menu={{ items: languageMenuItems, onClick: handleLanguageMenuClick }}>
-            <a onClick={(e) => e.preventDefault()} className="header-language-link">
-              <Space
-                style={{
-                  border: '1px solid #ccc',
-                  padding: '5px 10px',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                <GlobalOutlined />
-                Ngôn ngữ
+      {/* Right-hand Actions: Notifications, Language, Profile/Auth */}
+      <div className={s['header-actions']}>
+        <Button type="text" icon={<BellFilled style={{ fontSize: '18px' }} />} />
+        <Dropdown
+          menu={{ items: languageMenuItems, onClick: handleLanguageMenuClick }}
+          placement="bottomRight"
+          trigger={['click']}
+        >
+          <Button type="text" icon={<GlobalOutlined style={{ fontSize: '18px' }} />} />
+        </Dropdown>
+
+        {/* Profile/Auth Section */}
+        {currentUser.loggedIn ? (
+          <Dropdown
+            menu={{ items: profileMenuItems, onClick: handleProfileMenuClick }}
+            placement="bottomRight"
+            trigger={['click']}
+            onOpenChange={handleProfileDropdownVisibleChange}
+          >
+            <a onClick={(e) => e.preventDefault()} className={s['profile-dropdown-trigger']}>
+              <Avatar icon={<UserOutlined />} src={currentUser.avatarUrl} />
+              <span className={s.username}>{currentUser.name}</span>
+              <Space>
+                <CaretDownFilled className={c(s['dropdown-icon'], { [s.open]: isProfileDropdownOpen })} />
               </Space>
             </a>
           </Dropdown>
-        </nav>
+        ) : (
+          <Dropdown
+            menu={{ items: authMenuItems, onClick: handleProfileMenuClick }}
+            placement="bottomRight"
+            trigger={['click']}
+            onOpenChange={handleProfileDropdownVisibleChange}
+          >
+            <Button type="primary" icon={<UserOutlined />}/>
+          </Dropdown>
+        )}
       </div>
-      {/* Context holder for Ant Design Modal */}
-      {contextHolder}
     </header>
-    
   );
 }

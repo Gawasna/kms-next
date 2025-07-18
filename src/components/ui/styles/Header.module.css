@@ -1,0 +1,151 @@
+/* styles/Header.module.css */
+
+/* MAIN ATTRIBUTES */
+.main-header {
+  --small-text-size: 0.875rem;
+  --medium-text-size: 1rem;
+  --large-text-size: 1.25rem;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  margin-right: 24px;
+  flex-shrink: 0;
+}
+
+.gradient-logo {
+  background: linear-gradient(90deg, red, blue);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1890ff;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.search-section {
+  flex-grow: 1;
+  max-width: 500px;
+  position: relative;
+  margin-right: 24px;
+}
+
+/* Ant Design Input.Search là một component phức tạp, bạn có thể áp dụng style trực tiếp */
+.search-input {
+  width: 100%;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.profile-dropdown-trigger {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-dropdown-trigger .username {
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.dropdown-icon {
+  margin-left: 4px; 
+  color: rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease-in-out;
+}
+
+.dropdown-icon.open {
+  transform: rotate(180deg);
+}
+
+/* ================== Responsive Adjustments ================== */
+
+/* Medium screens (e.g., Tablets in landscape, small laptops) */
+@media (max-width: 992px) {
+  .main-header {
+    padding: 12px 20px;
+  }
+  .search-section {
+    max-width: 450px;
+    margin-right: 16px;
+  }
+  .header-actions {
+    gap: 12px;
+  }
+}
+
+/* Small screens (e.g., Tablets in portrait, large phones) */
+@media (max-width: 768px) {
+  .main-header {
+    flex-wrap: wrap; /* Cho phép các phần tử xuống dòng */
+    padding: 10px 16px;
+    justify-content: center; /* Căn giữa các phần tử khi chúng xuống dòng */
+  }
+
+  .logo-section,
+  .search-section,
+  .header-actions {
+    flex-basis: 100%;
+    margin-bottom: 10px;
+    margin-right: 0; 
+    justify-content: center;
+  }
+
+  .logo-section {
+    order: 1;
+    margin-bottom: 15px;
+  }
+  .search-section {
+    order: 2;
+    margin-bottom: 15px;
+    max-width: 90%;
+  }
+  .header-actions {
+    order: 3;
+    gap: 10px;
+  }
+
+}
+
+/* Extra small screens (e.g., Mobile phones) */
+@media (max-width: 576px) {
+  .main-header {
+    padding: 8px 10px;
+  }
+  .logo {
+    font-size: 20px;
+  }
+  .search-section {
+    max-width: 100%;
+  }
+  .header-actions {
+    gap: 8px;
+  }
+}

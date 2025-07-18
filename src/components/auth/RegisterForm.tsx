@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { z } from 'zod';
 import { registerSchema } from '@/lib/validators/userSchema';
 import { RegisterFormInputs } from '@/types/auth';
+import s from './styles/LoginForm.module.css';
+import c from 'clsx';
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState<RegisterFormInputs>({ email: '', password: '', confirmPassword: '' });
@@ -49,16 +51,16 @@ export default function RegisterForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="auth-form">
-      <h2 className="form-title">Đăng Ký</h2>
+    <form onSubmit={handleSubmit} className={s["auth-from"]}>
+      <h2 className={s["form-title"]}>Đăng Ký</h2>
 
       {message && (
-        <div className={`message ${message.type}`}>
+        <div className={c(s.message, s[message.type])}>
           {message.text}
         </div>
       )}
 
-      <div className="form-group">
+      <div className={s["form-group"]}>
         <label htmlFor="register-email">Email</label>
         <input
           type="email"
@@ -70,13 +72,13 @@ export default function RegisterForm() {
           required
         />
         {errors.find(err => err.path[0] === 'email') && (
-          <p className="error-message">
+          <p className={s["error-message"]}>
             {errors.find(err => err.path[0] === 'email')?.message}
           </p>
         )}
       </div>
 
-      <div className="form-group">
+      <div className={s["form-group"]}>
         <label htmlFor="register-password">Mật khẩu</label>
         <input
           type="password"
@@ -88,13 +90,13 @@ export default function RegisterForm() {
           required
         />
         {errors.find(err => err.path[0] === 'password') && (
-          <p className="error-message">
+          <p className={s["error-message"]}>
             {errors.find(err => err.path[0] === 'password')?.message}
           </p>
         )}
       </div>
 
-      <div className="form-group">
+      <div className={s["form-group"]}>
         <label htmlFor="confirm-password">Xác nhận mật khẩu</label>
         <input
           type="password"
@@ -106,19 +108,19 @@ export default function RegisterForm() {
           required
         />
         {errors.find(err => err.path[0] === 'confirmPassword') && (
-          <p className="error-message">
+          <p className={s["error-message"]}>
             {errors.find(err => err.path[0] === 'confirmPassword')?.message}
           </p>
         )}
       </div>
 
-      <button type="submit" className="submit-button" disabled={loading}>
+      <button type="submit" className={s["submit-button"]} disabled={loading}>
         {loading ? 'Đang đăng ký...' : 'Đăng Ký'}
       </button>
 
-      <div className="form-footer">
+      <div className={s["form-footer"]}>
         Đã có tài khoản?{' '}
-        <Link href="/auth/login" className="link-text">Đăng nhập</Link>
+        <Link href="/auth/login" className={s["link-text"]}>Đăng nhập</Link>
       </div>
     </form>
   );

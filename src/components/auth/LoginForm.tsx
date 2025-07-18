@@ -1,11 +1,13 @@
 // src/components/auth/LoginForm.tsx
-'use client'; // Đánh dấu là Client Component vì có state và interactivity
+'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { z } from 'zod';
 import { loginSchema } from '@/lib/validators/userSchema';
 import { LoginFormInputs } from '@/types/auth';
+import s from './styles/LoginForm.module.css';
+import c from 'clsx'
 
 export default function LoginForm() {
   const [formData, setFormData] = useState<LoginFormInputs>({ email: '', password: '' });
@@ -51,16 +53,16 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="auth-form">
-      <h2 className="form-title">Đăng Nhập</h2>
+    <form onSubmit={handleSubmit} className={s["auth-from"]}>
+      <h2 className={s["form-title"]}>Đăng Nhập</h2>
 
       {message && (
-        <div className={`message ${message.type}`}>
+        <div className={c(s.message, s[message.type])}>
           {message.text}
         </div>
       )}
 
-      <div className="form-group">
+      <div className={s["form-group"]}>
         <label htmlFor="email">Email</label>
         <input
           type="email"
@@ -72,13 +74,13 @@ export default function LoginForm() {
           required
         />
         {errors.find(err => err.path[0] === 'email') && (
-          <p className="error-message">
+          <p className={s["error-message"]}>
             {errors.find(err => err.path[0] === 'email')?.message}
           </p>
         )}
       </div>
 
-      <div className="form-group">
+      <div className={s["form-group"]}>
         <label htmlFor="password">Mật khẩu</label>
         <input
           type="password"
@@ -90,23 +92,23 @@ export default function LoginForm() {
           required
         />
         {errors.find(err => err.path[0] === 'password') && (
-          <p className="error-message">
+          <p className={s["error-message"]}>
             {errors.find(err => err.path[0] === 'password')?.message}
           </p>
         )}
       </div>
 
-      <div className="form-links">
-        <Link href="/auth/forgot-password" className="link-text">Quên mật khẩu?</Link>
+      <div className={s["form-link"]}>
+        <Link href="/auth/forgot-password" className={s["link-text"]}>Quên mật khẩu?</Link>
       </div>
 
-      <button type="submit" className="submit-button" disabled={loading}>
+      <button type="submit" className={s["submit-button"]} disabled={loading}>
         {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
       </button>
 
-      <div className="form-footer">
+      <div className={s["form-footer"]}>
         Chưa có tài khoản?{' '}
-        <Link href="/auth/register" className="link-text">Đăng ký ngay</Link>
+        <Link href="/auth/register" className={s["link-text"]}>Đăng ký ngay</Link>
       </div>
     </form>
   );

@@ -88,6 +88,8 @@ export default function RegisterForm() {
           onChange={handleChange}
           placeholder="••••••••"
           required
+          pattern=".{8,}"
+          title="Mật khẩu phải có ít nhất 8 ký tự"
         />
         {errors.find(err => err.path[0] === 'password') && (
           <p className={s["error-message"]}>

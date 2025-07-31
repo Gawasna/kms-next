@@ -4,10 +4,7 @@ import "./globals.css";
 import 'antd/dist/reset.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import AntdConfigProvider from "../components/common/AntdConfigProvider"; 
-import Header from '@/components/ui/Header';
-import Footer from '@/components/ui/Footer';
-import BackToTop from "@/components/ui/BackToTop";
-
+import AppShell from "@/components/AppShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -72,25 +69,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
         <AntdRegistry>
           <AntdConfigProvider>
-            {/* Đây là phần cấu trúc layout toàn cục */}
-            <div className="app-container"> {/* Container chính để quản lý layout (ví dụ sticky footer) */}
-              <Header />
-              <main className="content-wrapper"> {/* Phần này sẽ chứa nội dung của từng trang */}
-                {children}
-              </main>
-              <Footer />
-              <BackToTop /> {/* Nút quay lại đầu trang */}  
-            </div>
+            <AppShell>{children}</AppShell>
           </AntdConfigProvider>
         </AntdRegistry>
       </body>

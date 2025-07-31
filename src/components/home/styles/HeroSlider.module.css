@@ -1,61 +1,80 @@
-/* src/components/home/HeroSlider.module.css */
+/* src/components/home/styles/HeroSlider.module.css */
 
-.heroSliderContainer {
-  overflow: hidden;
-  position: relative;
-  width: 800px;
-  margin: 0 auto;
+/* Container chính của slider, nằm trong flexbox của HomePage */
+.carouselWrapper {
+  flex: 0 1 800px; /* Cho phép co lại nhưng không lớn hơn 800px */
   max-width: 800px;
-  flex: 0 1 auto;
-  border: var(--bd-thin);
-}
-
-/* Các selector cho Ant Design Carousel để đảm bảo chiều cao được truyền xuống */
-.heroSliderContainer :global(.ant-carousel .slick-slider) {
-  height: 100%;
-}
-
-.heroSliderContainer :global(.ant-carousel .slick-list) {
-  height: 100%;
-}
-
-.heroSliderContainer :global(.ant-carousel .slick-track) {
-  height: 100%;
-}
-
-.heroSlideItem {
-  height: 100%;
-  min-height: 400px; /* CỰC QUAN TRỌNG để tránh height: 0 ban đầu */
+  width: 100%;
   position: relative;
   overflow: hidden;
-}
-/* Tùy chỉnh dấu chấm chỉ thị (dots) nếu muốn */
-.heroSliderContainer :global(.ant-carousel .slick-dots li button) {
-  background: rgba(255, 255, 255, 0.5); /* Màu chấm mặc định */
-}
-
-.heroSliderContainer :global(.ant-carousel .slick-dots li.slick-active button) {
-  background: #fff; /* Màu chấm khi active */
+  border: var(--bd-thin);
+  border-radius: 8px; /* Thêm bo góc cho đẹp */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* Thêm bóng mờ */
 }
 
-/* Tùy chỉnh mũi tên điều hướng nếu muốn */
-.heroSliderContainer :global(.ant-carousel .slick-prev),
-.heroSliderContainer :global(.ant-carousel .slick-next) {
-  font-size: 30px; /* Kích thước mũi tên */
-  color: white; /* Màu mũi tên */
-  z-index: 1; /* Đảm bảo mũi tên nằm trên ảnh */
+/* Container của Ant Design Carousel, nơi áp dụng aspect-ratio */
+.carousel {
+  width: 100%;
+  aspect-ratio: 2 / 1;
+}
+
+/* Placeholder có cùng tỉ lệ với carousel thật */
+.carouselPlaceholder {
+  flex: 0 1 800px;
+  max-width: 800px;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f2f5; /* Màu nền nhẹ nhàng */
+  border-radius: 8px;
+  aspect-ratio: 2 / 1;
+}
+
+/* Container trực tiếp chứa Image 'fill' */
+.imageContainer {
+  width: 100%;
+  height: 100%;
+}
+
+/* Component Image của Next.js */
+.carouselImage {
+  object-fit: cover;
+}
+
+/* === GHI ĐÈ STYLE CỦA ANT DESIGN === */
+
+/* Đảm bảo tất cả các lớp div bên trong của antd kế thừa đúng chiều cao */
+.carouselWrapper :global(.ant-carousel .slick-slider),
+.carouselWrapper :global(.ant-carousel .slick-list),
+.carouselWrapper :global(.ant-carousel .slick-track),
+.carouselWrapper :global(.ant-carousel .slick-slide),
+.carouselWrapper :global(.ant-carousel .slick-slide > div) {
+    height: 100%;
+}
+
+/* Tùy chỉnh dấu chấm chỉ thị (dots) */
+.carouselWrapper :global(.ant-carousel .slick-dots) {
+  bottom: 16px;
+}
+
+
+
+.carouselWrapper :global(.ant-carousel .slick-dots li button) {
+  background: rgba(255, 255, 255, 0.5);
+  height: 8px;
+  width: 8px;
+  border-radius: 50%;
   transition: all 0.3s ease;
 }
 
-.heroSliderContainer :global(.ant-carousel .slick-prev:hover),
-.heroSliderContainer :global(.ant-carousel .slick-next:hover) {
-  color: #ff7e5f; /* Màu mũi tên khi hover */
+.carouselWrapper :global(.ant-carousel .slick-dots li.slick-active button) {
+  background: #fff;
 }
 
-/* RESPONSIVE STYLES */
-@media (max-width: 768px) {
-  .heroSliderContainer {
-    width: 100%; /* Chiếm toàn bộ chiều rộng trên màn hình nhỏ */
-    max-width: 100%;
+/* === RESPONSIVE === */
+@media (max-width: 992px) { /* Điều chỉnh cho phù hợp với layout flexbox */
+  .carouselWrapper {
+    flex-basis: 100%;
+    max-width: none;
   }
 }

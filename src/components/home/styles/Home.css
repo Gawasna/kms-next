@@ -3,10 +3,15 @@
   padding-top: 20px;
 }
 
+.ant-carousel {
+  height: 100%;
+}
+
 .hero-section-wrapper {
   display: flex;
   gap: 15px;
   margin-bottom: 30px;
+  flex-wrap: wrap; /* <-- THÊM DÒNG NÀY */
 }
 
 /* Browse Sections Grid */
@@ -102,14 +107,14 @@
 
 /* Notification Box */
 .notification-box {
-  flex: 1; 
-  border: 1px solid #000;
+  flex: 1 1 300px; /* Cho phép co giãn và có chiều rộng cơ bản là 300px */
+  border: 1px solid var(--bd-color); /* Sử dụng biến màu nếu có */
   padding: 15px;
   background-color: #fff;
-  height: 100%;
-  overflow: auto;
-  max-height: 400px;
-  border: 1px solid #ccc;
+  /* Bỏ height và max-height để nó tự điều chỉnh theo chiều cao của slider */
+  /* height: 100%; */
+  /* max-height: 400px; */
+  border-radius: 8px; /* Thêm bo góc cho đồng bộ */
 }
 
 .notification-box h3 {

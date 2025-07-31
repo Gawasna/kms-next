@@ -57,39 +57,6 @@ a:hover {
   box-sizing: border-box;
 }
 
-/* --- FOOTER --- */
-.footer {
-  background-color: #eee; /* Màu nền xám nhạt theo mockup */
-  color: #333;
-  padding: 25px 20px;
-  text-align: center;
-  margin-top: auto;
-  border-top: 1px solid #ddd; /* Border trên theo mockup */
-  font-size: 0.9em;
-}
-
-.footer-content {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.footer-nav {
-  margin-top: 15px;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-}
-
-.footer-nav a {
-  color: #007bff; /* Màu xanh cho links */
-  text-decoration: none;
-  transition: text-decoration 0.2s ease;
-}
-
-.footer-nav a:hover {
-  text-decoration: underline;
-}
-
 /* Hero Slider */
 .hero-slider-container {
   flex: 3; /* Chiếm 3 phần */

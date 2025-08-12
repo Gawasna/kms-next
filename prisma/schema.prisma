@@ -29,6 +29,14 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
+model GuestSession {
+  id          String    @id @default(cuid()) // ID duy nhất cho mỗi khách (lưu trong cookie)
+  lastActive  DateTime  @updatedAt // Tự động cập nhật khi record được update
+  createdAt   DateTime  @default(now())
+
+  @@index([lastActive]) // Index để truy vấn nhanh
+}
+
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
@@ -52,9 +60,13 @@ model User {
   image            String?
   passwordHash     String?         // Cần cho CredentialsProvider của NextAuth
   role             UserRole        @default(STUDENT) // Thêm trường vai trò
+  lastActive       DateTime?       // THÊM DÒNG NÀY: Thời gian hoạt động cuối cùng
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime?       @updatedAt // Tạm thời thêm ?
   accounts         Account[]
   sessions         Session[]
   knowledgeEntries KnowledgeEntry[] // Mối quan hệ 1-N: Một User có nhiều KnowledgeEntry
+  permissions      AccessPermission[]
   notifications    Notification[]   // Nếu có bảng Notification liên kết với User (sẽ tạo sau)
 }
 
@@ -101,7 +113,9 @@ model KnowledgeEntry {
   authorId        String
 
   status          KnowledgeEntryStatus @default(DRAFT) // Trạng thái của tài liệu
-  accessLevel     AccessLevel        @default(PRIVATE) // Mức độ truy cập
+  accessLevel     AccessLevel        @default(PRIVATE)
+
+  permissions     AccessPermission[]
 
   // Thuộc tính về tổ chức
   category        Category?          @relation(fields: [categoryId], references: [id])
@@ -124,6 +138,26 @@ model KnowledgeEntry {
   // @@fulltext([title, description, content]) // Bỏ comment nếu dùng PostgreSQL full-text search
 }
 
+model AccessPermission {
+  id               String          @id @default(cuid())
+  
+  knowledgeEntryId String
+  knowledgeEntry   KnowledgeEntry  @relation(fields: [knowledgeEntryId], references: [id], onDelete: Cascade)
+
+  userId           String?
+  user             User?           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  grantedToRole    UserRole?
+
+  expiresAt        DateTime?
+
+  createdAt        DateTime        @default(now())
+
+  @@unique([knowledgeEntryId, userId, grantedToRole])
+  @@index([knowledgeEntryId])
+  @@index([userId])
+}
+
 model Category {
   id              String           @id @default(uuid())
   name            String           @unique
@@ -143,11 +177,16 @@ model Tag {
   updatedAt DateTime         @updatedAt
 }
 
-// Optional: Notification model if you plan to implement this in MVP
+enum NotificationType {
+  NOTI
+  BANNER
+}
+
 model Notification {
   id              String @id @default(uuid())
   title           String
   content         String @db.Text
+  type            NotificationType @default(NOTI) // Thêm trường type: NOTI | BANNER
   isPublic        Boolean @default(false) // If true, visible to everyone including Guests
   userId          String? // Optional: if notification is for a specific user
   user            User?   @relation(fields: [userId], references: [id])

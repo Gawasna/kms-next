@@ -8,7 +8,9 @@ import BackToTop from '@/components/ui/BackToTop'
 
 const hiddenHeaderRoutes = [
   '/auth/verify',
-  '/dashboard/admin'
+  '/dashboard/admin',
+  '/dashboard/admin/users',
+  '/dashboard/admin/documents',
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

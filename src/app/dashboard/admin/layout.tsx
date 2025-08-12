@@ -51,12 +51,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     {
       key: '/dashboard/admin/tags',
       icon: <LogoutOutlined />,
-      label: <Link href="/auth/logout">Tags</Link>,
+      label: <Link href="/dashboard/admin/tags">Tags</Link>,
     },
     {
       key: '/dashboard/admin/categories',
       icon: <SettingOutlined />,
-      label: <Link href="/dashboard/admin/help">Categories</Link>,
+      label: <Link href="/dashboard/admin/categories">Categories</Link>,
     }
   ];
 

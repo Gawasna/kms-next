@@ -5,6 +5,7 @@ import { Layout, Menu, Button, Avatar } from 'antd';
 import { MenuUnfoldOutlined, MenuFoldOutlined, DashboardOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 
 const { Header, Sider, Content } = Layout;
 
@@ -15,7 +16,11 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
     const [collapsed, setCollapsed] = React.useState(false);
     const pathname = usePathname();
-    
+    const {
+        data: session,
+        status
+    } = useSession();
+
     return (
         <Layout style={{ minHeight: '100vh' }}>
             <Sider trigger={null} collapsible collapsed={collapsed} 
@@ -68,7 +73,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         />
                         <div>
                             <Avatar icon={<UserOutlined />} />
-                            <span style={{ marginLeft: 8 }}>User Name</span>
+                            <span style={{ marginLeft: 8 }}>
+                                {session ? session.user.name : 'Lỗi Hiển Thị'}
+                            </span>
                         </div>
                     </div>
                 </Header>

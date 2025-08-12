@@ -5,6 +5,8 @@ import 'antd/dist/reset.css';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import AntdConfigProvider from "../components/common/AntdConfigProvider"; 
 import AppShell from "@/components/AppShell";
+import AuthProvider from "@/components/providers/AuthProvider";
+import HeartbeatTracker from '@/components/common/HeartbeatTracker';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,11 +75,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
-        <AntdRegistry>
-          <AntdConfigProvider>
-            <AppShell>{children}</AppShell>
-          </AntdConfigProvider>
-        </AntdRegistry>
+        <AuthProvider>
+          <AntdRegistry>
+            <HeartbeatTracker />
+            <AntdConfigProvider>
+              <AppShell>{children}</AppShell>
+            </AntdConfigProvider>
+          </AntdRegistry>
+        </AuthProvider>
       </body>
     </html>
   );

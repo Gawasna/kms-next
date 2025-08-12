@@ -1,59 +1,76 @@
 // src/components/auth/LoginForm.tsx
+// version: "2.0.0", // Update version due to significant changes
+// quick description: Login form component for user authentication using react-hook-form and NextAuth.js
+// CAUTION: Always leave quick description at the top of the file each time update
 'use client';
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter từ next/navigation
+import { signIn } from 'next-auth/react'; // Import hàm signIn từ NextAuth.js
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { loginSchema } from '@/lib/validators/userSchema';
-import { LoginFormInputs } from '@/types/auth';
+
+import { loginSchema } from '@/lib/validators/userSchema'; // Import schema đã update
+// import { LoginFormInputs } from '@/types/auth'; // Không cần thiết khi dùng z.infer
 import s from './styles/LoginForm.module.css';
-import c from 'clsx'
+import c from 'clsx';
 
 export default function LoginForm() {
-  const [formData, setFormData] = useState<LoginFormInputs>({ email: '', password: '' });
-  const [errors, setErrors] = useState<z.ZodIssue[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter(); // Khởi tạo router để điều hướng
+
+  // Sử dụng infer để lấy type từ Zod schema, đảm bảo đồng bộ
+  type LoginFormSchema = z.infer<typeof loginSchema>;
+
+  const {
+    register, // Hàm để đăng ký input
+    handleSubmit, // Hàm xử lý submit form
+    formState: { errors, isSubmitting }, // Trạng thái form: lỗi và đang submit
+    // setError, // Có thể dùng để set lỗi thủ công từ server, nhưng NextAuth.js trả về lỗi chung
+  } = useForm<LoginFormSchema>({
+    resolver: zodResolver(loginSchema), // Tích hợp Zod validation
+    defaultValues: { // Thiết lập giá trị mặc định cho form
+      email: '',
+      password: '',
+    },
+  });
+
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Xóa lỗi cho trường hiện tại khi người dùng gõ
-    setErrors(prev => prev.filter(err => err.path[0] !== e.target.name));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrors([]);
-    setMessage(null);
+  const onSubmit = async (data: LoginFormSchema) => {
+    setMessage(null); // Xóa thông báo cũ
 
     try {
-      // Validate data with Zod
-      loginSchema.parse(formData);
+      // Gọi hàm signIn của NextAuth.js
+      // 'credentials' là ID của provider bạn đã cấu hình trong authOptions
+      // redirect: false để NextAuth.js không tự động chuyển hướng và chúng ta có thể xử lý phản hồi
+      const result = await signIn('credentials', {
+        redirect: false, // Quan trọng: Tắt tự động redirect của NextAuth.js
+        email: data.email,
+        password: data.password,
+        // callbackUrl: '/dashboard' // Tùy chọn: URL để redirect sau khi đăng nhập thành công nếu redirect: true
+      });
 
-      // Simulate API call
-      console.log('Login form submitted:', formData);
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
-
-      // Simulate success
-      setMessage({ type: 'success', text: 'Đăng nhập thành công! Đang chuyển hướng...' });
-      // In a real app, you would redirect here: router.push('/dashboard');
-
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        setErrors(error.errors);
-        setMessage({ type: 'error', text: 'Vui lòng kiểm tra lại thông tin đăng nhập.' });
-      } else {
-        setMessage({ type: 'error', text: 'Đã có lỗi xảy ra. Vui lòng thử lại.' });
-        console.error('Login error:', error);
+      if (result?.error) {
+        // Nếu có lỗi từ server (ví dụ: "Invalid credentials." từ hàm authorize)
+        setMessage({ type: 'error', text: result.error });
+      } else if (result?.ok) {
+        // Nếu đăng nhập thành công
+        setMessage({ type: 'success', text: 'Đăng nhập thành công! Đang chuyển hướng...' });
+        // Chuyển hướng người dùng đến trang dashboard hoặc trang chính
+        router.push('/'); // Hoặc '/'
       }
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Login submission error:', error);
+      setMessage({ type: 'error', text: 'Không thể kết nối đến máy chủ. Vui lòng thử lại sau.' });
     }
+    // `isSubmitting` từ react-hook-form sẽ tự động quản lý trạng thái loading
+    // Không cần finally block với setLoading(false) nữa
   };
 
   return (
-    <form onSubmit={handleSubmit} className={s["auth-from"]}>
+    <form onSubmit={handleSubmit(onSubmit)} className={s["auth-from"]}>
       <h2 className={s["form-title"]}>Đăng Nhập</h2>
 
       {message && (
@@ -67,15 +84,12 @@ export default function LoginForm() {
         <input
           type="email"
           id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
           placeholder="Email của bạn"
-          required
+          {...register('email')} // Đăng ký trường 'email' với react-hook-form
         />
-        {errors.find(err => err.path[0] === 'email') && (
+        {errors.email && (
           <p className={s["error-message"]}>
-            {errors.find(err => err.path[0] === 'email')?.message}
+            {errors.email.message}
           </p>
         )}
       </div>
@@ -85,15 +99,12 @@ export default function LoginForm() {
         <input
           type="password"
           id="password"
-          name="password"
-          value={formData.password}
-          onChange={handleChange}
           placeholder="••••••••"
-          required
+          {...register('password')} // Đăng ký trường 'password'
         />
-        {errors.find(err => err.path[0] === 'password') && (
+        {errors.password && (
           <p className={s["error-message"]}>
-            {errors.find(err => err.path[0] === 'password')?.message}
+            {errors.password.message}
           </p>
         )}
       </div>
@@ -102,8 +113,8 @@ export default function LoginForm() {
         <Link href="/auth/forgot-password" className={s["link-text"]}>Quên mật khẩu?</Link>
       </div>
 
-      <button type="submit" className={s["submit-button"]} disabled={loading}>
-        {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
+      <button type="submit" className={s["submit-button"]} disabled={isSubmitting}>
+        {isSubmitting ? 'Đang đăng nhập...' : 'Đăng Nhập'}
       </button>
 
       <div className={s["form-footer"]}>

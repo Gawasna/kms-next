@@ -11,6 +11,12 @@ const hiddenHeaderRoutes = [
   '/dashboard/admin',
   '/dashboard/admin/users',
   '/dashboard/admin/documents',
+  '/dashboard/admin/categories',
+  '/dashboard/admin/tags',
+  '/dashboard/lecturer',
+  '/dashboard/lecturer/tags',
+  '/dashboard/lecturer/documents',
+  '/dashboard/lecturer/students'
 ];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

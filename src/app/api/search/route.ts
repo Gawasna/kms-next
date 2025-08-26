@@ -6,7 +6,6 @@ import { UserRole, AccessLevel } from '@prisma/client';
 
 export async function GET(req: NextRequest) {
   try {
-    // Get search query from URL
     const searchParams = req.nextUrl.searchParams;
     const query = searchParams.get('q');
     
@@ -17,37 +16,67 @@ export async function GET(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get user session to determine access level
     const session = await getServerSession(authOptions);
-    const userRole = session?.user?.role || 'GUEST_ROLE' as UserRole;
-    const userId = session?.user?.id;
+    const currentUser = session?.user;
 
-    // Build access level conditions based on user role
-    const accessLevelConditions = [];
-    
-    // PUBLIC is always accessible
-    accessLevelConditions.push({ accessLevel: AccessLevel.PUBLIC });
-    
-    // Access based on role hierarchy
-    if (userRole === 'STUDENT' || userRole === 'LECTURER' || userRole === 'ADMIN') {
-      accessLevelConditions.push({ accessLevel: AccessLevel.STUDENT_ONLY });
-    }
-    
-    if (userRole === 'LECTURER' || userRole === 'ADMIN') {
-      accessLevelConditions.push({ accessLevel: AccessLevel.LECTURER_ONLY });
-    }
-    
-    // For PRIVATE, only the author or admin can access
-    if (userRole === 'ADMIN') {
-      accessLevelConditions.push({ accessLevel: AccessLevel.PRIVATE });
-    } else if (userId) {
-      accessLevelConditions.push({
-        accessLevel: AccessLevel.PRIVATE,
-        authorId: userId
-      });
-    }
+    // === Lấy logic phân quyền từ API documents GET ===
+    let permissionClause: any;
 
-    // Build search query with access conditions
+    if (!currentUser) {
+        permissionClause = {
+            status: 'APPROVED',
+            accessLevel: 'PUBLIC',
+            permissions: { none: {} }
+        };
+    } else {
+        const { id: currentUserId, role: currentUserRole } = currentUser;
+
+        if (currentUserRole === UserRole.ADMIN) {
+            permissionClause = {};
+        } else {
+            const generalAccessConditions: any[] = [{ accessLevel: 'PUBLIC' }];
+            if (currentUserRole === UserRole.STUDENT || currentUserRole === UserRole.LECTURER) {
+                generalAccessConditions.push({ accessLevel: 'STUDENT_ONLY' });
+            }
+            if (currentUserRole === UserRole.LECTURER) {
+                generalAccessConditions.push({ accessLevel: 'LECTURER_ONLY' });
+            }
+
+            permissionClause = {
+                OR: [
+                    { authorId: currentUserId },
+                    {
+                        AND: [
+                            { status: 'APPROVED' },
+                            {
+                                OR: [
+                                    {
+                                        AND: [
+                                            { permissions: { none: {} } },
+                                            { OR: generalAccessConditions }
+                                        ]
+                                    },
+                                    {
+                                        permissions: {
+                                            some: {
+                                                userId: currentUserId,
+                                                OR: [
+                                                    { expiresAt: null },
+                                                    { expiresAt: { gte: new Date() } }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            };
+        }
+    }
+    // === Hết logic phân quyền ===
+
     const results = await prisma.knowledgeEntry.findMany({
       where: {
         AND: [
@@ -58,12 +87,8 @@ export async function GET(req: NextRequest) {
               { content: { contains: query, mode: 'insensitive' } }
             ]
           },
-          {
-            OR: accessLevelConditions
-          },
-          { 
-            status: 'APPROVED' 
-          }
+          permissionClause, // Áp dụng mệnh đề phân quyền
+          { status: 'APPROVED' } // Chỉ tìm kiếm trong các tài liệu đã được duyệt
         ]
       },
       select: {
@@ -71,28 +96,17 @@ export async function GET(req: NextRequest) {
         title: true,
         description: true,
         categoryId: true,
-        category: {
-          select: {
-            name: true
-          }
-        },
-        author: {
-          select: {
-            name: true,
-            image: true
-          }
-        },
+        category: { select: { name: true } },
+        author: { select: { name: true, image: true } },
         viewsCount: true,
         createdAt: true,
         updatedAt: true,
-        // Don't return full content for performance reasons
       },
       orderBy: [
-        // Prioritize title matches, then most recently updated
         { title: 'asc' },
-        { updatedAt: 'desc' } // Most recently updated first
+        { updatedAt: 'desc' }
       ],
-      take: 5 // Return only top 5 results
+      take: 5
     });
 
     return NextResponse.json({

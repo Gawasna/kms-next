@@ -325,7 +325,7 @@ const DocumentsManagement = () => {
         { text: 'Lecturer Only', value: 'LECTURER_ONLY' },
         { text: 'Private', value: 'PRIVATE' },
       ],
-      onFilter: (value: string, record: Document) => record.accessLevel === value,
+      onFilter: (value: boolean | React.Key, record: Document) => record.accessLevel === String(value),
     },
     {
       title: 'Status',
@@ -337,7 +337,7 @@ const DocumentsManagement = () => {
         { text: 'Pending Review', value: 'PENDING_REVIEW' },
         { text: 'Rejected', value: 'REJECTED' },
       ],
-      onFilter: (value: string, record: Document) => record.status === value,
+      onFilter: (value: boolean | React.Key, record: Document) => record.status === String(value),
     },
     {
       title: 'Created Date',
@@ -355,7 +355,10 @@ const DocumentsManagement = () => {
           <Button 
             icon={<EyeOutlined />} 
             size="small" 
-            onClick={() => window.open(record.fileStorageUrl || '#', '_blank')}
+            onClick={() =>
+              //mở trang xem tài liệu /document/[id]
+              window.location.href = `/document/${record.id}`
+            }
           />
           <Button 
             icon={<DeleteOutlined />} 

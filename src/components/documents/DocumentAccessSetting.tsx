@@ -1,21 +1,24 @@
 'use client';
 
 import React from 'react';
-import { Radio, Space, Tooltip } from 'antd';
+import { FormInstance, Radio, Space, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { AccessLevel } from '@prisma/client';
+import { SpecificShareSetting } from './SpecificShareSetting';
 
 // Props mà Form.Item của Ant Design sẽ truyền vào
 interface DocumentAccessSettingProps {
-  value?: AccessLevel; // Nhận `value` từ Form
-  onChange?: (accessLevel: AccessLevel) => void; // Nhận `onChange` từ Form
+  value?: AccessLevel;
+  onChange?: (accessLevel: AccessLevel) => void;
+  form: FormInstance;
+  currentAccessLevel?: AccessLevel; // Thêm prop mới
 }
 
-export function DocumentAccessSetting({ value = 'PRIVATE', onChange }: DocumentAccessSettingProps) {
+export function DocumentAccessSetting({ value = 'PRIVATE', onChange, form, currentAccessLevel }: DocumentAccessSettingProps) {
   const handleChange = (e: any) => {
     const newValue: AccessLevel = e.target.value;
     if (onChange) {
-      onChange(newValue); // Gọi lại callback do Form.Item cung cấp để cập nhật giá trị của Form
+      onChange(newValue);
     }
   };
 
@@ -43,6 +46,8 @@ export function DocumentAccessSetting({ value = 'PRIVATE', onChange }: DocumentA
           ))}
         </Space>
       </Radio.Group>
+
+      {currentAccessLevel === 'STUDENT_ONLY' && <SpecificShareSetting form={form} />}
     </div>
   );
 }

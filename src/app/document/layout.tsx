@@ -1,4 +1,3 @@
-// app/document/layout.tsx
 import React from 'react';
 
 export default function DocumentLayout({

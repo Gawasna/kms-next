@@ -6,7 +6,7 @@ import {
   DashboardOutlined,
   UserOutlined,
   FileOutlined,
-  TeamOutlined,
+  BookOutlined,
   SettingOutlined,
   BellOutlined,
   LogoutOutlined
@@ -34,16 +34,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
       label: <Link href="/dashboard/admin/documents">Documents</Link>,
     },
     {
-      key: '/dashboard/admin/teams',
-      icon: <TeamOutlined />,
-      label: <Link href="/dashboard/admin/teams">Lectures</Link>,
-    },
-    {
-      key: '/dashboard/admin/settings',
-      icon: <SettingOutlined />,
-      label: <Link href="/dashboard/admin/settings">Settings</Link>,
-    },
-    {
       key: '/dashboard/admin/notifications',
       icon: <BellOutlined />,
       label: <Link href="/dashboard/admin/notifications">Notifications</Link>,
@@ -55,7 +45,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     },
     {
       key: '/dashboard/admin/categories',
-      icon: <SettingOutlined />,
+      icon: <BookOutlined />,
       label: <Link href="/dashboard/admin/categories">Categories</Link>,
     }
   ];

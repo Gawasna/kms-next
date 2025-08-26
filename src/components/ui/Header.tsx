@@ -64,7 +64,7 @@ export default function Header() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isSearching, setIsSearching] = useState(false);
-  
+
   // Debounce the search term to avoid making API calls on every keystroke
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -81,17 +81,17 @@ export default function Header() {
         setIsSearchDropdownOpen(false);
         return;
       }
-      
+
       setIsSearching(true);
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedSearchTerm)}`);
-        
+
         if (!response.ok) {
           throw new Error('Search request failed');
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
           // Transform API results to match SearchResult type
           const formattedResults: SearchResult[] = data.results.map((item: any) => ({
@@ -101,7 +101,7 @@ export default function Header() {
             date: new Date(item.updatedAt || item.createdAt).toLocaleDateString('vi-VN'),
             thumbnail: item.author?.image || `https://via.placeholder.com/40/3357FF/FFFFFF?text=${item.author?.name?.charAt(0) || 'U'}`
           }));
-          
+
           setSearchResults(formattedResults);
           setIsSearchDropdownOpen(formattedResults.length > 0);
         } else {
@@ -125,7 +125,7 @@ export default function Header() {
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
-    
+
     if (value.length < 2) {
       setSearchResults([]);
       setIsSearchDropdownOpen(false);
@@ -148,7 +148,7 @@ export default function Header() {
   const handleSearchResultClick = (result: SearchResult) => {
     router.push(`/document/${result.id}`);
     setIsSearchDropdownOpen(false);
-    setSearchTerm(result.title);
+    setSearchTerm('');  // Clear search term after clicking
     setSearchResults([]);
   };
 
@@ -222,10 +222,10 @@ export default function Header() {
       <div className={s['search-section']}>
         <Dropdown
           popupRender={() => (
-            <SearchDropdownResults 
-              results={searchResults} 
-              onResultClick={handleSearchResultClick} 
-              searchTerm={searchTerm} 
+            <SearchDropdownResults
+              results={searchResults}
+              onResultClick={handleSearchResultClick}
+              searchTerm={searchTerm}
             />
           )}
           open={isSearchDropdownOpen && searchResults.length > 0}

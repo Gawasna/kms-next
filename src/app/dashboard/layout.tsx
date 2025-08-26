@@ -72,7 +72,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             style={{ fontSize: '16px', width: 64, height: 64 }}
                         />
                         <div>
-                            <Avatar icon={<UserOutlined />} />
+                            <Avatar
+                                icon={<UserOutlined />}
+                                src={session?.user?.image || undefined}
+                            />
                             <span style={{ marginLeft: 8 }}>
                                 {session ? session.user.name : 'Lỗi Hiển Thị'}
                             </span>

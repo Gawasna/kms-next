@@ -37,7 +37,7 @@
     "lodash": "^4.17.21",
     "next": "15.3.4",
     "next-auth": "^4.24.11",
-    "nodemailer": "^7.0.4",
+    "nodemailer": "^6.9.13",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.62.0",

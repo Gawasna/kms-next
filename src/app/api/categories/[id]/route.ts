@@ -6,11 +6,13 @@ import prisma from '@/lib/db';
 // GET /api/categories/[id] - Get a category by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
+    const { id } = context.params;
+
     const category = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!category) {
@@ -22,7 +24,7 @@ export async function GET(
 
     return NextResponse.json(category);
   } catch (error) {
-    console.error(`Error fetching category ${params.id}:`, error);
+    console.error(`Error fetching category:`, error);
     return NextResponse.json(
       { message: 'Lỗi khi lấy thông tin danh mục' },
       { status: 500 }

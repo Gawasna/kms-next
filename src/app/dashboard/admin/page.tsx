@@ -1,6 +1,6 @@
 // src/app/dashboard/admin/page.tsx
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/authOptions';
 import { redirect } from 'next/navigation';
 import AdminDashboard from '@/components/admin/Dashboard'; // Import Client Component
 import { UserRole } from '@prisma/client'; // hoặc dùng string trực tiếp nếu không dùng Prisma

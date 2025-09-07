@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/authOptions';
 import prisma from '@/lib/db';
 
 // GET /api/tags - Get all tags or search by query

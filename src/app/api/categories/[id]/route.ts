@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/authOptions';
 import prisma from '@/lib/db';
 
 // GET /api/categories/[id] - Get a category by ID
@@ -86,7 +86,7 @@ export async function PUT(
     });
 
     return NextResponse.json(updatedCategory);
-  } catch (error) {
+  } catch (error: String | any) {
     console.error(`Error updating category ${params.id}:`, error);
     
     // Handle unique constraint violation

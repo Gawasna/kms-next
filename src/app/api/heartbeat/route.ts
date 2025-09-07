@@ -1,7 +1,7 @@
 // src/app/api/heartbeat/route.ts
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'; // Import authOptions của bạn
+import { authOptions } from '@/lib/auth/authOptions';
 import prisma from '@/lib/db';
 
 export async function POST(req: Request) {

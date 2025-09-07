@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { notFound, redirect } from 'next/navigation';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth/authOptions';
 import prisma from '@/lib/db';
 import DocumentViewer from '@/components/documents/DocumentViewer';
 import { Alert, Button } from 'antd';

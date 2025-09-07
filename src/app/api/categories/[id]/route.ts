@@ -6,10 +6,10 @@ import prisma from '@/lib/db';
 // GET /api/categories/[id] - Get a category by ID
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Record<string, string> }
 ) {
   try {
-    const { id } = context.params;
+    const id = context.params.id; // TS biết đây là string
 
     const category = await prisma.category.findUnique({
       where: { id },

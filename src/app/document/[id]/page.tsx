@@ -75,7 +75,7 @@ async function checkAccess(documentId: string, userId?: string, userRole?: UserR
 
 export default async function DocumentDetailPage({ params }: DocumentPageProps) {
   const session = await getServerSession(authOptions);
-  const { id: documentId } = params;
+  const { id: documentId } = await params; // ✅
 
   const { authorized, reason, document } = await checkAccess(documentId, session?.user?.id, session?.user?.role as UserRole); // Cast user.role
 

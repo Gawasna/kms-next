@@ -20,6 +20,7 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true, // 👈 Bật cho phép SVG từ remote
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  devIndicators: false,
   // Optimize bundle in development
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {

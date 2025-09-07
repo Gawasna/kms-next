@@ -208,10 +208,13 @@ export default function UploadDocumentPage() {
       form.resetFields();
       setFileList([]);
       setSelectedTags([]);
-
       setTimeout(() => {
-        router.push('/dashboard/documents');
-      }, 1500);
+        if (session?.user?.role === 'LECTURER') {
+          router.push('/dashboard/lecturer/documents');
+        } else {
+          router.push('/dashboard/admin');
+        }
+      }, 2000);
 
     } catch (error: any) {
       message.error(`Lỗi: ${error.message}`);

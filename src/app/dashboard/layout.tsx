@@ -40,9 +40,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     justifyContent: 'center',
                     alignItems: 'center',
                     color: 'white',
-                    fontSize: '20px'
+                    fontSize: '20px',
+                    cursor: 'pointer'
                 }}>
-                    {collapsed ? 'K' : 'KIMS'}
+                    <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>
+                        {collapsed ? 'K' : 'KIMS'}
+                    </Link>
                 </div>
                 <Menu
                     theme="dark"

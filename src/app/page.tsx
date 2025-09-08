@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: 'Trang Chủ',
   description: 'Chào mừng bạn đến với KIMS - Hệ thống quản lý tài liệu thông minh của bạn. Khám phá các tính năng mạnh mẽ để quản lý và tổ chức thông tin hiệu quả.',
   keywords: ['homepage', 'KIMS home', 'quản lý tài liệu', 'hệ thống thông tin', 'document management system'],
+  metadataBase: new URL(process.env.NEXT_PUBLIC_DOMAIN || 'http://localhost:3000'),
 };
 
 export default function HomePage() {

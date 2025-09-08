@@ -117,7 +117,7 @@ export const config = {
      * - favicon.ico
      * - và các file trong thư mục `public` (css, js, images, etc)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+    '/((?!_next/static|_next/image|favicon.ico).*)',
     // Hoặc cụ thể hơn, chỉ các route cần bảo vệ:
     // "/dashboard/:path*",
     // "/profile/:path*",

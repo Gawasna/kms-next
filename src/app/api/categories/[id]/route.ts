@@ -6,10 +6,17 @@ import prisma from '@/lib/db';
 // GET /api/categories/[id] - Get a category by ID
 export async function GET(
   request: NextRequest,
-  context: { params: Record<string, string> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = context.params.id; // TS biết đây là string
+    const id = (await params).id;
+
+    if (!id) {
+      return NextResponse.json(
+        { message: 'ID danh mục không hợp lệ' },
+        { status: 400 }
+      );
+    }
 
     const category = await prisma.category.findUnique({
       where: { id },
@@ -35,12 +42,21 @@ export async function GET(
 // PUT /api/categories/[id] - Update a category (ADMIN only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
+
   try {
     // Check authentication and authorization
     const session = await getServerSession(authOptions);
-    
+
+    if (!id) {
+      return NextResponse.json(
+        { message: 'ID danh mục không hợp lệ' },
+        { status: 400 }
+      );
+    }
+
     if (!session) {
       return NextResponse.json(
         { message: 'Bạn cần đăng nhập để thực hiện hành động này' },
@@ -57,7 +73,7 @@ export async function PUT(
 
     // Check if category exists
     const categoryExists = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!categoryExists) {
@@ -80,7 +96,7 @@ export async function PUT(
 
     // Update category
     const updatedCategory = await prisma.category.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: body.name,
         description: body.description || '',
@@ -89,8 +105,8 @@ export async function PUT(
 
     return NextResponse.json(updatedCategory);
   } catch (error: String | any) {
-    console.error(`Error updating category ${params.id}:`, error);
-    
+    console.error(`Error updating category ${id}:`, error);
+
     // Handle unique constraint violation
     if (error.code === 'P2002') {
       return NextResponse.json(
@@ -109,12 +125,21 @@ export async function PUT(
 // DELETE /api/categories/[id] - Delete a category (ADMIN only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // Check authentication and authorization
     const session = await getServerSession(authOptions);
-    
+    const id = (await params).id;
+
+    if (!id) {
+      return NextResponse.json(
+        { message: 'ID danh mục không hợp lệ' },
+        { status: 400 }
+      );
+    }
+
     if (!session) {
       return NextResponse.json(
         { message: 'Bạn cần đăng nhập để thực hiện hành động này' },
@@ -131,7 +156,7 @@ export async function DELETE(
 
     // Check if category exists
     const categoryExists = await prisma.category.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!categoryExists) {
@@ -143,7 +168,7 @@ export async function DELETE(
 
     // Check if category has related knowledge entries
     const knowledgeEntries = await prisma.knowledgeEntry.findMany({
-      where: { categoryId: params.id },
+      where: { categoryId: id },
       select: { id: true },
       take: 1, // We only need to know if there's at least one
     });
@@ -157,7 +182,7 @@ export async function DELETE(
 
     // Delete category
     await prisma.category.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json(
@@ -165,7 +190,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error(`Error deleting category ${params.id}:`, error);
+    console.error(`Error deleting category ${id}:`, error);
     return NextResponse.json(
       { message: 'Lỗi khi xóa danh mục' },
       { status: 500 }

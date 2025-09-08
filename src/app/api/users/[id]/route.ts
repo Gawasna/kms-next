@@ -24,14 +24,18 @@ interface UserParams {
 }
 
 // LẤY THÔNG TIN MỘT NGƯỜI DÙNG CỤ THỂ
-export async function GET(req: Request, { params }: UserParams) {
+export async function GET(
+  req: Request, 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: userId } = await params;
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== UserRole.ADMIN) {
       return NextResponse.json({ message: 'Bạn không có quyền truy cập.' }, { status: 403 });
     }
 
-    const userId = params.id;
+    const { id: userId } = await params;
     if (!userId) {
       return NextResponse.json({ message: 'ID người dùng không được cung cấp.' }, { status: 400 });
     }
@@ -58,20 +62,25 @@ export async function GET(req: Request, { params }: UserParams) {
     return NextResponse.json({ message: 'Lấy thông tin người dùng thành công.', user }, { status: 200 });
 
   } catch (error) {
-    console.error(`Error fetching user ${params.id}:`, error);
+    console.error(`Error fetching user ${userId}:`, error);
     return NextResponse.json({ message: 'Đã xảy ra lỗi khi lấy thông tin người dùng.' }, { status: 500 });
   }
 }
 
 // CẬP NHẬT VAI TRÒ CỦA NGƯỜI DÙNG (TỪ STUDENT THÀNH LECTURER)
-export async function PATCH(req: Request, { params }: UserParams) {
+export async function PATCH(
+  req: Request, 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  
+  const userId = (await params).id;
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== UserRole.ADMIN) {
       return NextResponse.json({ message: 'Bạn không có quyền cập nhật người dùng.' }, { status: 403 });
     }
 
-    const userId = params.id;
+    const userId = (await params).id;
     if (!userId) {
       return NextResponse.json({ message: 'ID người dùng không được cung cấp.' }, { status: 400 });
     }
@@ -125,20 +134,24 @@ export async function PATCH(req: Request, { params }: UserParams) {
     }, { status: 200 });
 
   } catch (error) {
-    console.error(`Error updating user ${params.id}:`, error);
+    console.error(`Error updating user ${userId}:`, error);
     return NextResponse.json({ message: 'Đã xảy ra lỗi khi cập nhật người dùng.' }, { status: 500 });
   }
 }
 
 // XÓA TÀI KHOẢN NGƯỜI DÙNG
-export async function DELETE(req: Request, { params }: UserParams) {
+export async function DELETE(
+  req: Request, 
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const userId = (await params).id;
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user?.role !== UserRole.ADMIN) {
       return NextResponse.json({ message: 'Bạn không có quyền xóa tài khoản.' }, { status: 403 });
     }
 
-    const userId = params.id;
+    const userId = (await params).id;
     if (!userId) {
       return NextResponse.json({ message: 'ID người dùng không được cung cấp.' }, { status: 400 });
     }
@@ -169,7 +182,7 @@ export async function DELETE(req: Request, { params }: UserParams) {
     return NextResponse.json({ message: 'Xóa tài khoản người dùng thành công.' }, { status: 204 }); // 204 No Content
 
   } catch (error) {
-    console.error(`Error deleting user ${params.id}:`, error);
+    console.error(`Error deleting user ${userId}:`, error);
     // Bắt lỗi P2025 (Record not found) nếu muốn trả về 404 thay vì 500
     if (error === 'P2025') {
         return NextResponse.json({ message: 'Người dùng không tồn tại để xóa.' }, { status: 404 });

@@ -41,11 +41,6 @@ export default async function ProfilePage() {
 
   return (
     <main style={{ padding: '24px', maxWidth: '800px', margin: '0 auto' }}>
-      {/* 
-        Truyền dữ liệu người dùng mới nhất từ server (user) xuống 
-        Client Component. Bằng cách này, UI sẽ luôn hiển thị thông tin đúng,
-        ngay cả khi session JWT chưa được cập nhật.
-      */}
       <UserProfile initialUser={user} />
     </main>
   );

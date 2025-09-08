@@ -5,10 +5,10 @@ import prisma from '@/lib/db';
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const documentId = params.id;
+    const documentId = (await params).id;
     const { hasViewed } = await req.json(); // Nhận trạng thái `hasViewed` từ client
 
     let viewIncrement = 0;

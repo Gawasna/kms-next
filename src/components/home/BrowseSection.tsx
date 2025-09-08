@@ -39,6 +39,7 @@ interface BrowseSectionProps {
   title: string;
   type: 'category' | 'author' | 'tag' | 'year';
   limit?: number;
+  items?: BrowseItem[];
 }
 
 export default function BrowseSection({ title, type, limit = 5 }: BrowseSectionProps) {

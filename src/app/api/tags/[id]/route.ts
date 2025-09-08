@@ -6,11 +6,12 @@ import prisma from '@/lib/db';
 // GET /api/tags/[id] - Get a tag by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     const tag = await prisma.tag.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!tag) {
@@ -22,7 +23,7 @@ export async function GET(
 
     return NextResponse.json(tag);
   } catch (error) {
-    console.error(`Error fetching tag ${params.id}:`, error);
+    console.error(`Error fetching tag ${id}:`, error);
     return NextResponse.json(
       { message: 'Lỗi khi lấy thông tin tag' },
       { status: 500 }
@@ -33,8 +34,9 @@ export async function GET(
 // PUT /api/tags/[id] - Update a tag (ADMIN only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // Check authentication and authorization
     const session = await getServerSession(authOptions);
@@ -56,7 +58,7 @@ export async function PUT(
 
     // Check if tag exists
     const tagExists = await prisma.tag.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!tagExists) {
@@ -82,7 +84,7 @@ export async function PUT(
 
     // Update tag
     const updatedTag = await prisma.tag.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         name: normalizedTagName,
       },
@@ -90,7 +92,7 @@ export async function PUT(
 
     return NextResponse.json(updatedTag);
   } catch (error) {
-    console.error(`Error updating tag ${params.id}:`, error);
+    console.error(`Error updating tag ${id}:`, error);
     
     // Handle unique constraint violation
     if (typeof error === 'object' && error !== null && 'code' in error && (error as any).code === 'P2002') {
@@ -110,8 +112,9 @@ export async function PUT(
 // DELETE /api/tags/[id] - Delete a tag (ADMIN only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const id = (await params).id;
   try {
     // Check authentication and authorization
     const session = await getServerSession(authOptions);
@@ -133,7 +136,7 @@ export async function DELETE(
 
     // Check if tag exists
     const tagExists = await prisma.tag.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         knowledgeEntries: {
           select: { id: true },
@@ -159,7 +162,7 @@ export async function DELETE(
 
     // Delete tag
     await prisma.tag.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json(
@@ -167,7 +170,7 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error) {
-    console.error(`Error deleting tag ${params.id}:`, error);
+    console.error(`Error deleting tag ${id}:`, error);
     return NextResponse.json(
       { message: 'Lỗi khi xóa tag' },
       { status: 500 }

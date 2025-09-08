@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   // Allow cross-origin requests for development
+  metadataBase: new URL(process.env.NEXT_PUBLIC_DOMAIN || 'http://localhost:3000'),
   allowedDevOrigins: ['192.168.1.5'],
   experimental: {
     // Only optimize CSS in production to speed up development

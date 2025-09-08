@@ -8,13 +8,15 @@ import Link from 'next/link';
 import { UserRole } from '@prisma/client'; // Đảm bảo import UserRole
 
 interface DocumentPageProps {
-  params: {
-    id: string; // Document ID từ URL
-  };
+  params: Promise<{ id: string }>;
 }
 
 // Hàm kiểm tra quyền truy cập (ĐÃ SỬA LỖI)
-async function checkAccess(documentId: string, userId?: string, userRole?: UserRole) {
+async function checkAccess(
+    documentId: string, 
+    userId?: string, 
+    userRole?: UserRole
+) {
     const doc = await prisma.knowledgeEntry.findUnique({
         where: { id: documentId },
         include: {
@@ -75,7 +77,7 @@ async function checkAccess(documentId: string, userId?: string, userRole?: UserR
 
 export default async function DocumentDetailPage({ params }: DocumentPageProps) {
   const session = await getServerSession(authOptions);
-  const { id: documentId } = await params; // ✅
+  const { id: documentId } = await params;
 
   const { authorized, reason, document } = await checkAccess(documentId, session?.user?.id, session?.user?.role as UserRole); // Cast user.role
 

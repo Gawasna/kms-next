@@ -111,17 +111,30 @@ export default withAuth(
 export const config = {
   matcher: [
     /*
-     * Match tất cả các path trừ:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico
-     * - và các file trong thư mục `public` (css, js, images, etc)
+     * Match các đường dẫn sau đây. Middleware sẽ chỉ chạy trên những đường dẫn này.
+     * Các đường dẫn công khai như /api/browse/... sẽ không được match và sẽ đi thẳng
+     * đến API Route, tránh được lỗi xung đột runtime.
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
-    // Hoặc cụ thể hơn, chỉ các route cần bảo vệ:
-    // "/dashboard/:path*",
-    // "/profile/:path*",
-    // "/api/protected/:path*",
-    // "/api/heartbeat" // Thêm heartbeat vào để nó có thể truy cập session.token
+
+    // == BẢO VỆ CÁC TRANG (PAGES) ==
+    '/dashboard/:path*', // Bảo vệ tất cả các trang dưới /dashboard
+    '/profile/:path*',   // Bảo vệ tất cả các trang dưới /profile
+
+    // == BẢO VỆ CÁC API ==
+    // API chỉ dành cho ADMIN
+    '/api/users/:path*',
+    '/api/categories/:path*',
+    '/api/tags/:path*',
+
+    // API yêu cầu người dùng phải đăng nhập
+    '/api/documents/my/:path*',
+    '/api/profile/upload-avatar',
+
+    // API thao tác với tài liệu (tạo/sửa/xóa) cũng cần đăng nhập
+    // Lưu ý: GET /api/documents/[id] có thể công khai, 
+    // nhưng POST, PUT, DELETE /api/documents/[id] cần bảo vệ.
+    // Middleware sẽ chạy cho tất cả các phương thức, logic bên trong API sẽ phân biệt sau.
+    '/api/documents', // Dành cho việc tạo mới (POST)
+    '/api/documents/:id', // Dành cho sửa/xóa (PUT/DELETE)
   ],
 };

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Input, Card, List, Tag, Space, Empty, Spin, Typography, Select, Divider } from 'antd';
-import { SearchOutlined, FileTextOutlined, UserOutlined, TagOutlined, FolderOutlined } from '@ant-design/icons';
+import { Input, Card, List, Tag, Space, Empty, Spin, Typography, Select, Pagination } from 'antd';
+import { SearchOutlined, FileTextOutlined, UserOutlined, FolderOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -14,163 +15,122 @@ interface SearchResult {
   id: string;
   title: string;
   description: string;
-  authorName: string;
-  categoryName: string;
+  author: { name: string; image: string | null };
+  category: { name: string };
   createdAt: string;
-  tags: { id: string; name: string; color: string }[];
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  accessLevel: 'PUBLIC' | 'STUDENT_ONLY' | 'LECTURER_ONLY' | 'PRIVATE';
+  updatedAt: string;
+  viewsCount: number;
+  accessLevel?: 'PUBLIC' | 'STUDENT_ONLY' | 'LECTURER_ONLY' | 'PRIVATE';
 }
 
 export default function SearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
-  const category = searchParams.get('category') || '';
-  const tag = searchParams.get('tag') || '';
+  const pageParam = searchParams.get('page') || '1';
+  const pageSizeParam = searchParams.get('pageSize') || '10';
   
+  const [searchTerm, setSearchTerm] = useState<string>(query);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [categories, setCategories] = useState<{id: string, name: string}[]>([]);
-  const [tags, setTags] = useState<{id: string, name: string}[]>([]);
+  const [totalResults, setTotalResults] = useState<number>(0);
+  const [page, setPage] = useState<number>(parseInt(pageParam));
+  const [pageSize, setPageSize] = useState<number>(parseInt(pageSizeParam));
+  
+  const debouncedSearchTerm = useDebounce<string>(searchTerm, 500);
 
-  // Simulate search functionality
-  const handleSearch = (value: string) => {
-    const params = new URLSearchParams();
-    if (value) params.set('q', value);
-    if (category) params.set('category', category);
-    if (tag) params.set('tag', tag);
+  // Update URL with current search parameters
+  const updateSearchParams = (params: { q?: string; page?: number; pageSize?: number }) => {
+    const newParams = new URLSearchParams(searchParams.toString());
     
-    router.push(`/search?${params.toString()}`);
-  };
-
-  const handleCategoryChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set('category', value);
-    } else {
-      params.delete('category');
+    if (params.q !== undefined) {
+      if (params.q) newParams.set('q', params.q);
+      else newParams.delete('q');
     }
-    router.push(`/search?${params.toString()}`);
-  };
-
-  const handleTagChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value) {
-      params.set('tag', value);
-    } else {
-      params.delete('tag');
+    
+    if (params.page !== undefined) {
+      if (params.page > 1) newParams.set('page', params.page.toString());
+      else newParams.delete('page');
     }
-    router.push(`/search?${params.toString()}`);
+    
+    if (params.pageSize !== undefined) {
+      if (params.pageSize !== 10) newParams.set('pageSize', params.pageSize.toString());
+      else newParams.delete('pageSize');
+    }
+    
+    router.push(`/search?${newParams.toString()}`);
   };
 
-  // Mock data fetch
+  // Handle search from the search box
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    if (page !== 1) setPage(1);
+    else updateSearchParams({ q: value, page: 1 });
+  };
+
+  // Handle page change
+  const handlePageChange = (newPage: number, newPageSize?: number) => {
+    setPage(newPage);
+    if (newPageSize && newPageSize !== pageSize) {
+      setPageSize(newPageSize);
+      updateSearchParams({ page: newPage, pageSize: newPageSize });
+    } else {
+      updateSearchParams({ page: newPage });
+    }
+  };
+
+  // Fetch search results when debounced search term changes
   useEffect(() => {
     const fetchSearchResults = async () => {
+      if (!debouncedSearchTerm.trim()) {
+        setSearchResults([]);
+        setTotalResults(0);
+        return;
+      }
+      
       setLoading(true);
       try {
-        // In a real app, this would be an API call like:
-        // const response = await fetch(`/api/search?q=${query}&category=${category}&tag=${tag}`);
-        // const data = await response.json();
+        const response = await fetch(
+          `/api/search?q=${encodeURIComponent(debouncedSearchTerm)}`
+        );
         
-        // For demo, we'll use mock data
-        setTimeout(() => {
-          const mockResults: SearchResult[] = [
-            {
-              id: '1',
-              title: 'Introduction to JavaScript',
-              description: 'A comprehensive guide to JavaScript fundamentals for beginners.',
-              authorName: 'John Doe',
-              categoryName: 'Programming',
-              createdAt: '2025-08-15T10:30:00Z',
-              tags: [
-                { id: '1', name: 'JavaScript', color: 'blue' },
-                { id: '2', name: 'Frontend', color: 'green' }
-              ],
-              status: 'APPROVED',
-              accessLevel: 'PUBLIC'
-            },
-            {
-              id: '2',
-              title: 'React Hooks Tutorial',
-              description: 'Learn how to use React Hooks effectively in your applications.',
-              authorName: 'Jane Smith',
-              categoryName: 'Web Development',
-              createdAt: '2025-08-10T14:20:00Z',
-              tags: [
-                { id: '3', name: 'React', color: 'cyan' },
-                { id: '4', name: 'Hooks', color: 'purple' }
-              ],
-              status: 'APPROVED',
-              accessLevel: 'STUDENT_ONLY'
-            },
-            {
-              id: '3',
-              title: 'Advanced Database Design',
-              description: 'Explore complex database design patterns and optimization techniques.',
-              authorName: 'Robert Johnson',
-              categoryName: 'Database',
-              createdAt: '2025-07-28T09:15:00Z',
-              tags: [
-                { id: '5', name: 'SQL', color: 'orange' },
-                { id: '6', name: 'NoSQL', color: 'red' }
-              ],
-              status: 'APPROVED',
-              accessLevel: 'LECTURER_ONLY'
-            }
-          ];
-
-          // Filter by search query if provided
-          let filteredResults = mockResults;
-          if (query) {
-            filteredResults = mockResults.filter(result => 
-              result.title.toLowerCase().includes(query.toLowerCase()) || 
-              result.description.toLowerCase().includes(query.toLowerCase())
-            );
-          }
-
-          // Filter by category if provided
-          if (category) {
-            filteredResults = filteredResults.filter(result => 
-              result.categoryName.toLowerCase() === category.toLowerCase()
-            );
-          }
-
-          // Filter by tag if provided
-          if (tag) {
-            filteredResults = filteredResults.filter(result => 
-              result.tags.some(t => t.name.toLowerCase() === tag.toLowerCase())
-            );
-          }
-
-          setSearchResults(filteredResults);
-          
-          // Mock categories and tags for filters
-          setCategories([
-            { id: '1', name: 'Programming' },
-            { id: '2', name: 'Web Development' },
-            { id: '3', name: 'Database' }
-          ]);
-          
-          setTags([
-            { id: '1', name: 'JavaScript' },
-            { id: '2', name: 'Frontend' },
-            { id: '3', name: 'React' },
-            { id: '4', name: 'Hooks' },
-            { id: '5', name: 'SQL' },
-            { id: '6', name: 'NoSQL' }
-          ]);
-          
-          setLoading(false);
-        }, 800); // Simulate network delay
+        if (!response.ok) {
+          throw new Error('Search request failed');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          setSearchResults(data.results || []);
+          setTotalResults(data.totalCount || 0);
+        } else {
+          console.error('Search error:', data.message);
+          setSearchResults([]);
+          setTotalResults(0);
+        }
       } catch (error) {
         console.error('Error fetching search results:', error);
+        setSearchResults([]);
+        setTotalResults(0);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchSearchResults();
-  }, [query, category, tag]);
+    // Update URL when debounced search term changes
+    if (debouncedSearchTerm !== query) {
+      updateSearchParams({ q: debouncedSearchTerm, page: 1 });
+    } else {
+      fetchSearchResults();
+    }
+  }, [debouncedSearchTerm, query, page, pageSize]);
+
+  // Update states when URL params change
+  useEffect(() => {
+    setSearchTerm(query);
+    setPage(parseInt(pageParam) || 1);
+    setPageSize(parseInt(pageSizeParam) || 10);
+  }, [query, pageParam, pageSizeParam]);
 
   // Function to format date
   const formatDate = (dateString: string) => {
@@ -182,21 +142,10 @@ export default function SearchPage() {
     }).format(date);
   };
 
-  // Access level badge
-  const getAccessLevelTag = (level: string) => {
-    switch (level) {
-      case 'PUBLIC':
-        return <Tag color="green">Công khai</Tag>;
-      case 'STUDENT_ONLY':
-        return <Tag color="blue">Sinh viên</Tag>;
-      case 'LECTURER_ONLY':
-        return <Tag color="purple">Giảng viên</Tag>;
-      case 'PRIVATE':
-        return <Tag color="red">Riêng tư</Tag>;
-      default:
-        return null;
-    }
-  };
+  // Calculate pagination
+  const startIndex = (page - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalResults);
+  const paginatedResults = searchResults.slice(startIndex, endIndex);
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">
@@ -209,53 +158,34 @@ export default function SearchPage() {
           allowClear
           enterButton={<SearchOutlined />}
           size="large"
-          defaultValue={query}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
           onSearch={handleSearch}
         />
         
-        <Divider className="my-4" />
-        
-        {/* Filters */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full md:w-1/2">
-            <Text strong>Danh mục:</Text>
+        {/* Page size selector */}
+        <div className="mt-4 flex justify-end">
+          <Space>
+            <Text>Hiển thị mỗi trang:</Text>
             <Select
-              allowClear
-              placeholder="Chọn danh mục"
-              style={{ width: '100%', marginTop: '8px' }}
-              value={category || undefined}
-              onChange={handleCategoryChange}
-            >
-              {categories.map((cat) => (
-                <Option key={cat.id} value={cat.name}>{cat.name}</Option>
-              ))}
-            </Select>
-          </div>
-          
-          <div className="w-full md:w-1/2">
-            <Text strong>Thẻ:</Text>
-            <Select
-              allowClear
-              placeholder="Chọn thẻ"
-              style={{ width: '100%', marginTop: '8px' }}
-              value={tag || undefined}
-              onChange={handleTagChange}
-            >
-              {tags.map((t) => (
-                <Option key={t.id} value={t.name}>{t.name}</Option>
-              ))}
-            </Select>
-          </div>
+              value={pageSize}
+              onChange={(value) => handlePageChange(1, value)}
+              options={[
+                { value: 5, label: '5' },
+                { value: 10, label: '10' },
+                { value: 15, label: '15' },
+                { value: 20, label: '20' },
+              ]}
+            />
+          </Space>
         </div>
       </Card>
       
       {/* Search results */}
       <Card>
         <div className="mb-4">
-          <Text>Có {searchResults.length} kết quả tìm kiếm</Text>
+          <Text>Có {totalResults} kết quả tìm kiếm</Text>
           {query && <Text> cho "{query}"</Text>}
-          {category && <Text> trong danh mục "{category}"</Text>}
-          {tag && <Text> với thẻ "{tag}"</Text>}
         </div>
         
         {loading ? (
@@ -268,44 +198,55 @@ export default function SearchPage() {
             image={Empty.PRESENTED_IMAGE_SIMPLE} 
           />
         ) : (
-          <List
-            itemLayout="vertical"
-            dataSource={searchResults}
-            renderItem={(item) => (
-              <List.Item
-                key={item.id}
-                className="border-b last:border-b-0 hover:bg-gray-50 rounded-md p-4"
-              >
-                <Link href={`/document/${item.id}`} className="block">
-                  <Title level={4} className="mb-2 text-blue-600 hover:underline">
-                    <FileTextOutlined className="mr-2" />
-                    {item.title}
-                  </Title>
-                  
-                  <Text type="secondary" className="block mb-3">
-                    {item.description}
-                  </Text>
-                  
-                  <Space size={[0, 8]} wrap className="mb-2">
-                    {getAccessLevelTag(item.accessLevel)}
-                    {item.tags.map((tag) => (
-                      <Tag color={tag.color} key={tag.id}>{tag.name}</Tag>
-                    ))}
-                  </Space>
-                  
-                  <div className="flex flex-col md:flex-row md:justify-between mt-3 text-xs text-gray-500">
-                    <Space>
-                      <UserOutlined /> {item.authorName}
-                      <FolderOutlined /> {item.categoryName}
-                    </Space>
-                    <Text type="secondary">
-                      Ngày tạo: {formatDate(item.createdAt)}
+          <>
+            <List
+              itemLayout="vertical"
+              dataSource={paginatedResults}
+              renderItem={(item) => (
+                <List.Item
+                  key={item.id}
+                  className="border-b last:border-b-0 hover:bg-gray-50 rounded-md p-4"
+                >
+                  <Link href={`/document/${item.id}`} className="block">
+                    <Title level={4} className="mb-2 text-blue-600 hover:underline">
+                      <FileTextOutlined className="mr-2" />
+                      {item.title}
+                    </Title>
+                    
+                    <Text type="secondary" className="block mb-3">
+                      {item.description}
                     </Text>
-                  </div>
-                </Link>
-              </List.Item>
+                    
+                    <div className="flex flex-col md:flex-row md:justify-between mt-3 text-xs text-gray-500">
+                      <Space>
+                        <UserOutlined /> {item.author.name}
+                        <FolderOutlined /> {item.category.name}
+                        <span>Lượt xem: {item.viewsCount}</span>
+                      </Space>
+                      <Text type="secondary">
+                        Cập nhật: {formatDate(item.updatedAt)}
+                      </Text>
+                    </div>
+                  </Link>
+                </List.Item>
+              )}
+            />
+            
+            {/* Pagination */}
+            {totalResults > 0 && (
+              <div className="mt-6 flex justify-center">
+                <Pagination
+                  current={page}
+                  pageSize={pageSize}
+                  total={totalResults}
+                  onChange={handlePageChange}
+                  showSizeChanger
+                  pageSizeOptions={['5', '10', '15', '20']}
+                  showTotal={(total, range) => `${range[0]}-${range[1]} của ${total} kết quả`}
+                />
+              </div>
             )}
-          />
+          </>
         )}
       </Card>
     </div>

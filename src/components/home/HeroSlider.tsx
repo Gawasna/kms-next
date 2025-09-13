@@ -15,10 +15,10 @@ interface Slide {
 
 // Dữ liệu ảnh, có thể được truyền từ props trong tương lai
 const slides: Slide[] = [
-  { id: 1, src: 'https://placehold.co/800x400/FF5733/FFFFFF?text=KIMS+Slide+1', alt: 'KIMS Slider Image 1' },
-  { id: 2, src: 'https://placehold.co/800x600/33FF57/FFFFFF?text=Slide+Tỉ+Lệ+Khác', alt: 'KIMS Slider Image 2' },
-  { id: 3, src: 'https://placehold.co/1200x400/3357FF/FFFFFF?text=Slide+Siêu+Rộng', alt: 'KIMS Slider Image 3' },
-  { id: 4, src: 'https://placehold.co/800x800/FF33E0/FFFFFF?text=Slide+Vuông', alt: 'KIMS Slider Image 4' },
+  { id: 1, src: '/images/MG_0798-1-e1700098574312.jpg', alt: 'KIMS Slider Image 1' },
+  { id: 2, src: '/images/Rectangle-19765.png', alt: 'KIMS Slider Image 2' },
+  { id: 3, src: '/images/thu-vien_2008093402.jpg', alt: 'KIMS Slider Image 3' },
+  { id: 4, src: '/images/image.jpg', alt: 'KIMS Slider Image 4' },
 ];
 
 export default function HeroSlider() {

@@ -1,8 +1,7 @@
-// src/components/documents/SpecificShareSetting.tsx
 'use client';
 
 import React, { useState } from 'react';
-import { Input, Select, DatePicker, Tag, Typography, Alert, Form, Divider } from 'antd';
+import { Input, Select, DatePicker, Tag, Typography, Form, Divider } from 'antd';
 import type { FormInstance } from 'antd';
 
 const { TextArea } = Input;
@@ -10,31 +9,11 @@ const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
 interface SpecificShareSettingProps {
-  form: FormInstance; // Nhận form instance để set giá trị
+  form: FormInstance;
 }
 
-// Regex để parse email
-const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
-
 export function SpecificShareSetting({ form }: SpecificShareSettingProps) {
-  const [emails, setEmails] = useState<string[]>([]);
-  const [invalidEmails, setInvalidEmails] = useState<string[]>([]);
   const [deadlineOption, setDeadlineOption] = useState<string>('none');
-
-  // Hàm parse và validate email từ TextArea
-  const handleEmailChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const text = e.target.value;
-    const rawEmails = text.match(emailRegex) || [];
-    const uniqueEmails = [...new Set(rawEmails.map(email => email.toLowerCase()))];
-    
-    // Tìm các email không hợp lệ (phần còn lại sau khi trích xuất)
-    const invalidParts = text.replace(/[\s,;]+/g, ' ').split(' ').filter(part => part && !emailRegex.test(part));
-    setInvalidEmails(invalidParts);
-    setEmails(uniqueEmails);
-    
-    // Cập nhật giá trị cho Ant Design Form
-    form.setFieldValue('specificEmails', uniqueEmails);
-  };
 
   // Xử lý thay đổi thời hạn
   const handleDeadlineChange = (value: string) => {
@@ -49,33 +28,62 @@ export function SpecificShareSetting({ form }: SpecificShareSettingProps) {
     <div className="mt-4 p-4 border-t">
       <Text strong>Chia sẻ với sinh viên cụ thể</Text>
       <Text type="secondary" style={{ display: 'block', marginBottom: '12px' }}>
-        Để trống nếu muốn chia sẻ với tất cả sinh viên.
+        Để trống nếu muốn chia sẻ với tất cả sinh viên. Nhập danh sách email, phân cách bằng dấu phẩy (,), chấm phẩy (;), khoảng trắng hoặc xuống dòng.
       </Text>
 
-      <Form.Item name="specificEmails" noStyle>
+      <Form.Item 
+        name="specificEmails" 
+        rules={[
+          {
+            validator: async (_, value) => {
+              if (!value) return Promise.resolve();
+              
+              // Nếu là string (người dùng nhập text area), thì parse thành mảng
+              let emailsToCheck = value;
+              if (typeof value === 'string') {
+                // Tách chuỗi thành mảng email dựa trên dấu phẩy, chấm phẩy, khoảng trắng, xuống dòng
+                emailsToCheck = value
+                  .split(/[\s,;]+/)
+                  .map(e => e.trim())
+                  .filter(e => e); // Loại bỏ chuỗi rỗng
+              }
+
+              // Nếu không có email nào để xử lý
+              if (!emailsToCheck.length) return Promise.resolve();
+              
+              // Regex kiểm tra email
+              const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+$/;
+              
+              // Tách thành email hợp lệ và không hợp lệ
+              const validEmails = [];
+              const invalidEmails = [];
+              
+              for (const email of emailsToCheck) {
+                if (emailRegex.test(email)) {
+                  validEmails.push(email.toLowerCase());
+                } else if (email) {
+                  invalidEmails.push(email);
+                }
+              }
+              
+              // Cập nhật giá trị trong form thành mảng email đã được validate
+              form.setFieldValue('specificEmails', [...new Set(validEmails)]);
+              
+              // Nếu có email không hợp lệ thì trả về lỗi
+              if (invalidEmails.length > 0) {
+                return Promise.reject(`Email không hợp lệ: ${invalidEmails.join(', ')}`);
+              }
+              
+              return Promise.resolve();
+            },
+          },
+        ]}
+      >
         <TextArea
           rows={4}
-          placeholder="Nhập danh sách email, phân tách bằng dấu phẩy, khoảng trắng hoặc xuống dòng..."
-          onChange={handleEmailChange}
+          placeholder="Ví dụ: student1@example.com, student2@example.com"
         />
       </Form.Item>
-      
-      {invalidEmails.length > 0 && (
-        <Alert
-          message={`Các mục sau không phải là email hợp lệ và đã bị bỏ qua: ${invalidEmails.join(', ')}`}
-          type="warning"
-          showIcon
-          style={{ marginTop: '8px' }}
-        />
-      )}
-      
-      <div className="mt-2">
-        {emails.map(email => (
-          <Tag key={email} closable onClose={() => setEmails(emails.filter(e => e !== email))}>
-            {email}
-          </Tag>
-        ))}
-      </div>
       
       <Divider />
       

@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const file = formData.get('file') as File | null;
-  
+
   if (!file) {
     return NextResponse.json({ message: 'Vui lòng cung cấp file tài liệu.' }, { status: 400 });
   }
@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
         // Lỗi này sẽ tự động rollback transaction
         throw new Error(`Lỗi khi tải file lên: ${uploadError.message}`);
       }
-      
+
       // 4. Cập nhật KnowledgeEntry với thông tin file
       const { data: { publicUrl } } = supabaseAdminClient.storage
         .from('documents')
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
       // 5. Xử lý và tạo các quyền truy cập đặc biệt
       if (accessLevel === 'STUDENT_ONLY' && permissions && permissions.emails.length > 0) {
         const usersToGrantAccess = await tx.user.findMany({
-          where: { 
+          where: {
             email: { in: permissions.emails },
             role: 'STUDENT' // Đảm bảo chỉ chia sẻ cho sinh viên
           },
@@ -147,16 +147,16 @@ export async function POST(req: NextRequest) {
         let expiresAt: Date | null = null;
         const { option, dates } = permissions.deadline;
         if (option !== 'none') {
-            expiresAt = new Date();
-            if (option === '30d') expiresAt.setDate(expiresAt.getDate() + 30);
-            else if (option === '60d') expiresAt.setDate(expiresAt.getDate() + 60);
-            else if (option === '90d') expiresAt.setDate(expiresAt.getDate() + 90);
-            else if (option === 'custom' && dates) {
-                // Lấy ngày cuối cùng của RangePicker làm ngày hết hạn
-                expiresAt = new Date(dates[1]);
-            }
+          expiresAt = new Date();
+          if (option === '30d') expiresAt.setDate(expiresAt.getDate() + 30);
+          else if (option === '60d') expiresAt.setDate(expiresAt.getDate() + 60);
+          else if (option === '90d') expiresAt.setDate(expiresAt.getDate() + 90);
+          else if (option === 'custom' && dates) {
+            // Lấy ngày cuối cùng của RangePicker làm ngày hết hạn
+            expiresAt = new Date(dates[1]);
+          }
         }
-        
+
         const permissionData = usersToGrantAccess.map(user => ({
           knowledgeEntryId: newEntry.id,
           userId: user.id,
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
             data: permissionData,
           });
         }
-        
+
         // (Optional) Trả về thông tin email không hợp lệ
         const foundEmails = usersToGrantAccess.map(u => u.email);
         const notFoundEmails = permissions.emails.filter(email => !foundEmails.includes(email));
@@ -178,7 +178,12 @@ export async function POST(req: NextRequest) {
       return updatedEntry;
     });
 
-    return NextResponse.json({ message: 'Tải lên và tạo tài liệu thành công!', entry: result }, { status: 201 });
+    return NextResponse.json({
+      message: 'Tải lên và tạo tài liệu thành công!',
+      entry: result,
+      //notFoundEmails: notFoundEmails.length > 0 ? notFoundEmails : undefined
+    }, { status: 201 });
+
 
   } catch (error: any) {
     console.error("Transaction Error:", error);
@@ -187,121 +192,121 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-    const session = await getServerSession(authOptions);
-    const currentUser = session?.user;
+  const session = await getServerSession(authOptions);
+  const currentUser = session?.user;
 
-    const { searchParams } = new URL(req.url);
-    const keyword = searchParams.get('keyword');
-    const categoryId = searchParams.get('categoryId');
+  const { searchParams } = new URL(req.url);
+  const keyword = searchParams.get('keyword');
+  const categoryId = searchParams.get('categoryId');
 
-    // 1. Filter cơ bản luôn được áp dụng
-    const baseFilters: any[] = [];
-    if (keyword) {
-        baseFilters.push({
-            OR: [
-                { title: { contains: keyword, mode: 'insensitive' } },
-                { description: { contains: keyword, mode: 'insensitive' } },
-            ]
-        });
-    }
-    if (categoryId) {
-        baseFilters.push({ categoryId });
-    }
+  // 1. Filter cơ bản luôn được áp dụng
+  const baseFilters: any[] = [];
+  if (keyword) {
+    baseFilters.push({
+      OR: [
+        { title: { contains: keyword, mode: 'insensitive' } },
+        { description: { contains: keyword, mode: 'insensitive' } },
+      ]
+    });
+  }
+  if (categoryId) {
+    baseFilters.push({ categoryId });
+  }
 
-    // 2. Mệnh đề phân quyền chính
-    let permissionClause: any;
+  // 2. Mệnh đề phân quyền chính
+  let permissionClause: any;
 
-    if (!currentUser) {
-        // --- Guest (chưa đăng nhập) ---
-        permissionClause = {
-            status: 'APPROVED',
-            accessLevel: 'PUBLIC',
-            // Quan trọng: Guest không bao giờ có quyền cụ thể
-            permissions: { none: {} }
-        };
-    } else {
-        // --- Người dùng đã đăng nhập ---
-        const { id: currentUserId, role: currentUserRole } = currentUser;
-
-        if (currentUserRole === 'ADMIN') {
-            // Admin thấy tất cả, không cần thêm điều kiện phân quyền
-            permissionClause = {};
-        } else {
-            // Logic cho các vai trò khác (STUDENT, LECTURER)
-            
-            // Điều kiện cho quyền truy cập chung dựa trên vai trò của người dùng
-            const generalAccessConditions: any[] = [{ accessLevel: 'PUBLIC' }];
-            if (currentUserRole === UserRole.STUDENT || currentUserRole === UserRole.LECTURER) {
-                generalAccessConditions.push({ accessLevel: 'STUDENT_ONLY' });
-            }
-            if (currentUserRole === UserRole.LECTURER) {
-                generalAccessConditions.push({ accessLevel: 'LECTURER_ONLY' });
-            }
-
-            permissionClause = {
-                OR: [
-                    // A. Người dùng là tác giả
-                    { authorId: currentUserId },
-
-                    // B. Hoặc, tài liệu thỏa mãn các điều kiện sau:
-                    {
-                        AND: [
-                            { status: 'APPROVED' }, // Tài liệu phải được duyệt
-                            {
-                                OR: [
-                                    // 1. Tài liệu KHÔNG có chia sẻ cụ thể VÀ `accessLevel` phù hợp
-                                    {
-                                        AND: [
-                                            { permissions: { none: {} } }, // Ràng buộc cốt lõi: KHÔNG có permission nào
-                                            { OR: generalAccessConditions } // VÀ accessLevel phải phù hợp
-                                        ]
-                                    },
-                                    // 2. Tài liệu CÓ chia sẻ cụ thể VÀ người dùng nằm trong danh sách
-                                    {
-                                        permissions: {
-                                            some: { // Phải có ÍT NHẤT MỘT permission...
-                                                userId: currentUserId, // ...cho chính người dùng này
-                                                OR: [ // ...và chưa hết hạn
-                                                    { expiresAt: null },
-                                                    { expiresAt: { gte: new Date() } }
-                                                ]
-                                            }
-                                        }
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                ]
-            };
-        }
-    }
-
-    // 3. Kết hợp các filter
-    const whereClause = {
-        AND: [
-            ...baseFilters,
-            permissionClause,
-        ]
+  if (!currentUser) {
+    // --- Guest (chưa đăng nhập) ---
+    permissionClause = {
+      status: 'APPROVED',
+      accessLevel: 'PUBLIC',
+      // Quan trọng: Guest không bao giờ có quyền cụ thể
+      permissions: { none: {} }
     };
+  } else {
+    // --- Người dùng đã đăng nhập ---
+    const { id: currentUserId, role: currentUserRole } = currentUser;
 
-    try {
-        const documents = await prisma.knowledgeEntry.findMany({
-            where: whereClause,
-            include: {
-                author: { select: { name: true, image: true } },
-                category: { select: { name: true } },
-                tags: { select: { name: true } },
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
-            take: 20,
-        });
+    if (currentUserRole === 'ADMIN') {
+      // Admin thấy tất cả, không cần thêm điều kiện phân quyền
+      permissionClause = {};
+    } else {
+      // Logic cho các vai trò khác (STUDENT, LECTURER)
 
-        return NextResponse.json(documents);
-    } catch (error) {
-        console.error("GET Documents Error:", error);
-        return NextResponse.json({ message: "Lỗi khi lấy danh sách tài liệu." }, { status: 500 });
+      // Điều kiện cho quyền truy cập chung dựa trên vai trò của người dùng
+      const generalAccessConditions: any[] = [{ accessLevel: 'PUBLIC' }];
+      if (currentUserRole === UserRole.STUDENT || currentUserRole === UserRole.LECTURER) {
+        generalAccessConditions.push({ accessLevel: 'STUDENT_ONLY' });
+      }
+      if (currentUserRole === UserRole.LECTURER) {
+        generalAccessConditions.push({ accessLevel: 'LECTURER_ONLY' });
+      }
+
+      permissionClause = {
+        OR: [
+          // A. Người dùng là tác giả
+          { authorId: currentUserId },
+
+          // B. Hoặc, tài liệu thỏa mãn các điều kiện sau:
+          {
+            AND: [
+              { status: 'APPROVED' }, // Tài liệu phải được duyệt
+              {
+                OR: [
+                  // 1. Tài liệu KHÔNG có chia sẻ cụ thể VÀ `accessLevel` phù hợp
+                  {
+                    AND: [
+                      { permissions: { none: {} } }, // Ràng buộc cốt lõi: KHÔNG có permission nào
+                      { OR: generalAccessConditions } // VÀ accessLevel phải phù hợp
+                    ]
+                  },
+                  // 2. Tài liệu CÓ chia sẻ cụ thể VÀ người dùng nằm trong danh sách
+                  {
+                    permissions: {
+                      some: { // Phải có ÍT NHẤT MỘT permission...
+                        userId: currentUserId, // ...cho chính người dùng này
+                        OR: [ // ...và chưa hết hạn
+                          { expiresAt: null },
+                          { expiresAt: { gte: new Date() } }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      };
     }
+  }
+
+  // 3. Kết hợp các filter
+  const whereClause = {
+    AND: [
+      ...baseFilters,
+      permissionClause,
+    ]
+  };
+
+  try {
+    const documents = await prisma.knowledgeEntry.findMany({
+      where: whereClause,
+      include: {
+        author: { select: { name: true, image: true } },
+        category: { select: { name: true } },
+        tags: { select: { name: true } },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 20,
+    });
+
+    return NextResponse.json(documents);
+  } catch (error) {
+    console.error("GET Documents Error:", error);
+    return NextResponse.json({ message: "Lỗi khi lấy danh sách tài liệu." }, { status: 500 });
+  }
 }

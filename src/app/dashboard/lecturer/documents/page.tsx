@@ -1,29 +1,30 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Typography, 
-  Button, 
-  Input, 
-  Space, 
-  Tag, 
-  Modal, 
-  Form, 
-  Select, 
-  Upload, 
-  message,
+import {
+  Card,
+  Table,
+  Typography,
+  Button,
+  Input,
+  Space,
+  Tag,
+  Modal, // Vẫn import Modal nếu bạn dùng các component Modal thông thường, nhưng dùng app.modal cho confirm
+  Form,
+  Select,
+  Upload,
+  // message, // Không cần import message trực tiếp nữa
   Spin,
   Empty,
   Tooltip,
-  Badge
+  Badge,
+  App // <-- THÊM CÁI NÀY
 } from 'antd';
-import { 
-  SearchOutlined, 
-  PlusOutlined, 
-  DeleteOutlined, 
-  EditOutlined, 
+import {
+  SearchOutlined,
+  PlusOutlined,
+  DeleteOutlined,
+  EditOutlined,
   EyeOutlined,
   InboxOutlined,
   FileTextOutlined,
@@ -84,7 +85,8 @@ interface PaginationData {
   totalPages: number;
 }
 
-const LecturerDocumentsManagement = () => {
+// Bọc component chính trong một component con để có thể sử dụng App.useApp()
+const LecturerDocumentsManagementContent = () => { // Đổi tên component nội bộ
   const [searchText, setSearchText] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
@@ -104,6 +106,9 @@ const LecturerDocumentsManagement = () => {
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
   const router = useRouter();
 
+  // Sử dụng App.useApp() để lấy các instance message và modal có ngữ cảnh
+  const { message: appMessage, modal: appModal } = App.useApp();
+
   // Fetch documents from API
   const fetchDocuments = async () => {
     setLoading(true);
@@ -118,19 +123,19 @@ const LecturerDocumentsManagement = () => {
       if (statusFilter) {
         url += `&status=${statusFilter}`;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch documents');
       }
-      
+
       const data = await response.json();
       setDocuments(data.documents);
       setPagination(data.pagination);
     } catch (error) {
       console.error('Error fetching documents:', error);
-      message.error('Failed to load documents');
+      appMessage.error('Failed to load documents'); // Sử dụng appMessage
     } finally {
       setLoading(false);
     }
@@ -147,7 +152,7 @@ const LecturerDocumentsManagement = () => {
       setCategories(data);
     } catch (error) {
       console.error('Error fetching categories:', error);
-      message.error('Failed to load categories');
+      appMessage.error('Failed to load categories'); // Sử dụng appMessage
     }
   };
 
@@ -166,7 +171,7 @@ const LecturerDocumentsManagement = () => {
   }, [searchText]);
 
   const handleDelete = (id: string) => {
-    Modal.confirm({
+    appModal.confirm({ // <-- THAY THẾ Modal.confirm BẰNG appModal.confirm
       title: 'Bạn có chắc chắn muốn xóa tài liệu này?',
       content: 'Hành động này không thể hoàn tác.',
       okText: 'Xóa',
@@ -177,16 +182,17 @@ const LecturerDocumentsManagement = () => {
           const response = await fetch(`/api/documents/my?id=${id}`, {
             method: 'DELETE',
           });
-          
+
           if (!response.ok) {
-            throw new Error('Failed to delete document');
+            const errorData = await response.json(); // Lấy thông báo lỗi từ backend
+            throw new Error(errorData.message || 'Failed to delete document');
           }
-          
-          message.success('Xóa tài liệu thành công');
+
+          appMessage.success('Xóa tài liệu thành công'); // Sử dụng appMessage
           fetchDocuments(); // Refresh the document list
-        } catch (error) {
+        } catch (error: any) { // Cải thiện kiểu lỗi để truy cập message
           console.error('Error deleting document:', error);
-          message.error('Không thể xóa tài liệu');
+          appMessage.error(`Không thể xóa tài liệu: ${error.message || 'Lỗi không xác định'}`); // Sử dụng appMessage
         }
       },
     });
@@ -237,38 +243,38 @@ const LecturerDocumentsManagement = () => {
         throw new Error(errorData.message || 'Failed to update document');
       }
 
-      message.success('Cập nhật tài liệu thành công');
+      appMessage.success('Cập nhật tài liệu thành công'); // Sử dụng appMessage
       setIsUpdateModalVisible(false);
       fetchDocuments(); // Refresh the document list
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating document:', error);
-      message.error('Không thể cập nhật tài liệu');
+      appMessage.error(`Không thể cập nhật tài liệu: ${error.message || 'Lỗi không xác định'}`); // Sử dụng appMessage
     }
   };
 
   const handleSubmit = async (values: any) => {
     if (fileList.length === 0) {
-      message.error('Vui lòng tải lên một tập tin');
+      appMessage.error('Vui lòng tải lên một tập tin'); // Sử dụng appMessage
       return;
     }
 
     setUploading(true);
-    
+
     try {
       const formData = new FormData();
       formData.append('file', fileList[0].originFileObj);
       formData.append('title', values.title);
       formData.append('description', values.description || '');
       formData.append('accessLevel', values.accessLevel);
-      
+
       if (values.categoryId) {
         formData.append('categoryId', values.categoryId);
       }
-      
+
       if (selectedTags.length > 0) {
         formData.append('tags', JSON.stringify(selectedTags));
       }
-      
+
       if (values.permissions) {
         const permissionsData = {
           emails: values.permissions.emails || [],
@@ -290,12 +296,12 @@ const LecturerDocumentsManagement = () => {
         throw new Error(errorData.message || 'Failed to upload document');
       }
 
-      message.success('Tải lên tài liệu thành công');
+      appMessage.success('Tải lên tài liệu thành công'); // Sử dụng appMessage
       setIsModalVisible(false);
       fetchDocuments(); // Refresh the document list
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading document:', error);
-      message.error('Không thể tải lên tài liệu');
+      appMessage.error(`Không thể tải lên tài liệu: ${error.message || 'Lỗi không xác định'}`); // Sử dụng appMessage
     } finally {
       setUploading(false);
     }
@@ -361,7 +367,7 @@ const LecturerDocumentsManagement = () => {
 
   const formatFileSize = (bytes: number | null) => {
     if (!bytes) return 'N/A';
-    
+
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     if (bytes === 0) return '0 Byte';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
@@ -380,8 +386,8 @@ const LecturerDocumentsManagement = () => {
           </a>
           {record.description && (
             <Text type="secondary" className="text-xs">
-              {record.description.length > 80 
-                ? record.description.substring(0, 80) + '...' 
+              {record.description.length > 80
+                ? record.description.substring(0, 80) + '...'
                 : record.description}
             </Text>
           )}
@@ -408,7 +414,7 @@ const LecturerDocumentsManagement = () => {
       key: 'category',
       render: (text: string) => text || 'Chưa phân loại',
       filters: categories.map(category => ({ text: category.name, value: category.id })),
-      onFilter: (value: React.Key | boolean, record: Document) => 
+      onFilter: (value: React.Key | boolean, record: Document) =>
         record.category?.id === value,
     },
     {
@@ -444,7 +450,7 @@ const LecturerDocumentsManagement = () => {
         { text: 'Chỉ giảng viên', value: 'LECTURER_ONLY' },
         { text: 'Riêng tư', value: 'PRIVATE' },
       ],
-      onFilter: (value: React.Key | boolean, record: Document) => 
+      onFilter: (value: React.Key | boolean, record: Document) =>
         record.accessLevel === value,
     },
     {
@@ -459,7 +465,7 @@ const LecturerDocumentsManagement = () => {
         { text: 'Bản nháp', value: 'DRAFT' },
         { text: 'Đã ẩn', value: 'HIDDEN' },
       ],
-      onFilter: (value: React.Key | boolean, record: Document) => 
+      onFilter: (value: React.Key | boolean, record: Document) =>
         record.status === value,
     },
     {
@@ -467,7 +473,7 @@ const LecturerDocumentsManagement = () => {
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date: string) => new Date(date).toLocaleDateString('vi-VN'),
-      sorter: (a: Document, b: Document) => 
+      sorter: (a: Document, b: Document) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     },
     {
@@ -476,24 +482,24 @@ const LecturerDocumentsManagement = () => {
       render: (_: any, record: Document) => (
         <Space size="small">
           <Tooltip title="Xem tài liệu">
-            <Button 
-              icon={<EyeOutlined />} 
-              size="small" 
+            <Button
+              icon={<EyeOutlined />}
+              size="small"
               onClick={() => window.open(`/document/${record.id}`, '_blank')}
             />
           </Tooltip>
           <Tooltip title="Chỉnh sửa trạng thái">
-            <Button 
-              icon={<EditOutlined />} 
+            <Button
+              icon={<EditOutlined />}
               size="small"
               onClick={() => showUpdateModal(record)}
             />
           </Tooltip>
           <Tooltip title="Xóa tài liệu">
-            <Button 
-              icon={<DeleteOutlined />} 
-              size="small" 
-              danger 
+            <Button
+              icon={<DeleteOutlined />}
+              size="small"
+              danger
               onClick={() => handleDelete(record.id)}
             />
           </Tooltip>
@@ -506,9 +512,9 @@ const LecturerDocumentsManagement = () => {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <Title level={3}>Quản lý tài liệu của tôi</Title>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />} 
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
           onClick={navigateUpload}
         >
           Thêm tài liệu mới
@@ -525,8 +531,8 @@ const LecturerDocumentsManagement = () => {
             style={{ width: 300 }}
             allowClear
           />
-          <Select 
-            placeholder="Lọc theo danh mục" 
+          <Select
+            placeholder="Lọc theo danh mục"
             style={{ width: 200 }}
             allowClear
             onChange={(value) => setCategoryFilter(value)}
@@ -537,8 +543,8 @@ const LecturerDocumentsManagement = () => {
               </Select.Option>
             ))}
           </Select>
-          <Select 
-            placeholder="Lọc theo trạng thái" 
+          <Select
+            placeholder="Lọc theo trạng thái"
             style={{ width: 200 }}
             allowClear
             onChange={(value) => setStatusFilter(value)}
@@ -550,7 +556,7 @@ const LecturerDocumentsManagement = () => {
             <Select.Option value="HIDDEN">Đã ẩn</Select.Option>
           </Select>
         </div>
-        
+
         {loading ? (
           <div className="text-center py-10">
             <Spin size="large" />
@@ -598,14 +604,14 @@ const LecturerDocumentsManagement = () => {
           >
             <Input placeholder="Nhập tiêu đề tài liệu" />
           </Form.Item>
-          
+
           <Form.Item
             name="description"
             label="Mô tả"
           >
             <TextArea rows={3} placeholder="Nhập mô tả ngắn về tài liệu" />
           </Form.Item>
-          
+
           <Form.Item
             name="accessLevel"
             label="Mức độ truy cập"
@@ -619,7 +625,7 @@ const LecturerDocumentsManagement = () => {
               <Select.Option value="PRIVATE">Riêng tư (Chỉ bạn)</Select.Option>
             </Select>
           </Form.Item>
-          
+
           <Form.Item
             name="categoryId"
             label="Danh mục"
@@ -634,15 +640,15 @@ const LecturerDocumentsManagement = () => {
           </Form.Item>
 
           <Form.Item label="Tags">
-            <Input 
+            <Input
               placeholder="Nhập tag và nhấn Enter"
               onKeyPress={handleTagInputChange}
             />
             <div className="mt-2">
               {selectedTags.map(tag => (
-                <Tag 
-                  key={tag} 
-                  closable 
+                <Tag
+                  key={tag}
+                  closable
                   onClose={() => removeTag(tag)}
                   className="my-1"
                 >
@@ -653,11 +659,11 @@ const LecturerDocumentsManagement = () => {
           </Form.Item>
 
           <Form.Item
-            shouldUpdate={(prevValues, currentValues) => 
+            shouldUpdate={(prevValues, currentValues) =>
               prevValues.accessLevel !== currentValues.accessLevel
             }
           >
-            {({ getFieldValue }) => 
+            {({ getFieldValue }) =>
               getFieldValue('accessLevel') === 'STUDENT_ONLY' && (
                 <Form.Item label="Chia sẻ đặc biệt">
                   <Form.Item name={['permissions', 'emails']} noStyle>
@@ -668,11 +674,11 @@ const LecturerDocumentsManagement = () => {
                       tokenSeparators={[',']}
                     />
                   </Form.Item>
-                  
+
                   <div className="mt-2">
-                    <Form.Item 
-                      name={['permissions', 'deadlineOption']} 
-                      label="Thời hạn truy cập" 
+                    <Form.Item
+                      name={['permissions', 'deadlineOption']}
+                      label="Thời hạn truy cập"
                       initialValue="none"
                     >
                       <Select>
@@ -683,7 +689,7 @@ const LecturerDocumentsManagement = () => {
                         <Select.Option value="custom">Tùy chỉnh</Select.Option>
                       </Select>
                     </Form.Item>
-                    
+
                     <Form.Item
                       shouldUpdate={(prevValues, currentValues) =>
                         prevValues.permissions?.deadlineOption !== currentValues.permissions?.deadlineOption
@@ -725,9 +731,9 @@ const LecturerDocumentsManagement = () => {
               <Button style={{ marginRight: 8 }} onClick={handleCancel}>
                 Hủy bỏ
               </Button>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
+              <Button
+                type="primary"
+                htmlType="submit"
                 loading={uploading}
                 disabled={fileList.length === 0}
               >
@@ -800,5 +806,12 @@ const LecturerDocumentsManagement = () => {
     </div>
   );
 };
+
+// Component chính được export, bọc LecturerDocumentsManagementContent trong App
+const LecturerDocumentsManagement = () => (
+  <App>
+    <LecturerDocumentsManagementContent />
+  </App>
+);
 
 export default LecturerDocumentsManagement;

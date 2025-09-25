@@ -153,75 +153,83 @@ export default function UploadDocumentPage() {
     }
   };
 
-  const handleSubmit = async (values: any) => {
-    if (fileList.length === 0) {
-      message.error('Vui lòng chọn file tài liệu để tải lên');
-      return;
+const handleSubmit = async (values: any) => {
+  if (fileList.length === 0) {
+    message.error('Vui lòng chọn file tài liệu để tải lên');
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const formData = new FormData();
+    formData.append('file', fileList[0].originFileObj);
+    formData.append('title', values.title);
+    formData.append('description', values.description || '');
+    formData.append('accessLevel', values.accessLevel);
+
+    if (values.categoryId) {
+      formData.append('categoryId', values.categoryId);
     }
 
-    setIsLoading(true);
+    if (selectedTags.length > 0) {
+      formData.append('tags', JSON.stringify(selectedTags));
+    }
 
-    try {
-      const formData = new FormData();
-      formData.append('file', fileList[0].originFileObj);
-      formData.append('title', values.title);
-      formData.append('description', values.description || '');
-      formData.append('accessLevel', values.accessLevel); // Giờ sẽ luôn có giá trị đúng
-
-      if (values.categoryId) {
-        formData.append('categoryId', values.categoryId);
-      }
-
-      if (selectedTags.length > 0) {
-        formData.append('tags', JSON.stringify(selectedTags));
-      }
-
-      if (values.accessLevel === 'STUDENT_ONLY' && values.specificEmails?.length > 0) {
-        const permissions = {
-          emails: values.specificEmails,
-          deadline: {
-            option: values.deadlineOption,
-            // AntD RangePicker trả về mảng [moment, moment]
-            dates: values.customDeadline ? [values.customDeadline[0].toISOString(), values.customDeadline[1].toISOString()] : null,
-          }
-        };
-        formData.append('permissions', JSON.stringify(permissions));
-      }
-
-      const response = await fetch('/api/documents', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Upload failed:", errorData);
-        // Hiển thị lỗi chi tiết hơn nếu có
-        const errorMessage = errorData.errors ?
-          Object.values(errorData.errors.fieldErrors).flat().join(', ') :
-          errorData.message;
-        throw new Error(errorMessage || 'Tải lên tài liệu thất bại');
-      }
-
-      message.success('Tài liệu đã được tải lên thành công!');
-
-      form.resetFields();
-      setFileList([]);
-      setSelectedTags([]);
-      setTimeout(() => {
-        if (session?.user?.role === 'LECTURER') {
-          router.push('/dashboard/lecturer/documents');
-        } else {
-          router.push('/dashboard/admin');
+    // Xử lý phần quyền truy cập
+    if (values.accessLevel === 'STUDENT_ONLY' && values.specificEmails?.length > 0) {
+      const permissions = {
+        emails: values.specificEmails,
+        deadline: {
+          option: values.deadlineOption || 'none',
+          dates: values.customDeadline 
+            ? [values.customDeadline[0].toISOString(), values.customDeadline[1].toISOString()] 
+            : null,
         }
-      }, 2000);
-
-    } catch (error: any) {
-      message.error(`Lỗi: ${error.message}`);
-    } finally {
-      setIsLoading(false);
+      };
+      formData.append('permissions', JSON.stringify(permissions));
     }
-  };
+
+    const response = await fetch('/api/documents', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Upload failed:", errorData);
+      const errorMessage = errorData.errors ?
+        Object.values(errorData.errors.fieldErrors).flat().join(', ') :
+        errorData.message;
+      throw new Error(errorMessage || 'Tải lên tài liệu thất bại');
+    }
+
+    const result = await response.json();
+    
+    // Hiển thị thông báo về email không tìm thấy (nếu có)
+    if (result.notFoundEmails && result.notFoundEmails.length > 0) {
+      message.warning(`Một số email không tìm thấy trong hệ thống: ${result.notFoundEmails.join(', ')}`);
+    }
+    
+    message.success('Tài liệu đã được tải lên thành công!');
+
+    form.resetFields();
+    setFileList([]);
+    setSelectedTags([]);
+    setTimeout(() => {
+      if (session?.user?.role === 'LECTURER') {
+        router.push('/dashboard/lecturer/documents');
+      } else {
+        router.push('/dashboard/admin');
+      }
+    }, 2000);
+
+  } catch (error: any) {
+    message.error(`Lỗi: ${error.message}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Handle tag selection change
   const handleTagChange = (values: string[]) => {

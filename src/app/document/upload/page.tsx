@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Button, Input, Select, Upload, message, Typography, Form, Spin, Tag, Divider } from 'antd';
+import { Button, Input, Select, Upload, message, Typography, Form, Spin, Tag, Divider, App } from 'antd';
 import { UploadOutlined, SearchOutlined, LoadingOutlined, FileOutlined, TagOutlined, FolderOutlined } from '@ant-design/icons';
 import { DocumentAccessSetting } from '@/components/documents/DocumentAccessSetting';
 import { useRouter } from 'next/navigation';
@@ -27,6 +27,7 @@ export default function UploadDocumentPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const [form] = Form.useForm();
+  const { notification } = App.useApp();
   const [fileList, setFileList] = useState<any[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -176,10 +177,9 @@ const handleSubmit = async (values: any) => {
       formData.append('tags', JSON.stringify(selectedTags));
     }
 
-    // Xử lý phần quyền truy cập
-    if (values.accessLevel === 'STUDENT_ONLY' && values.specificEmails?.length > 0) {
+    if (values.accessLevel === 'STUDENT_ONLY' && values.specificEmails && values.specificEmails.length > 0) {
       const permissions = {
-        emails: values.specificEmails,
+        emails: values.specificEmails, // Đây đã là một mảng string
         deadline: {
           option: values.deadlineOption || 'none',
           dates: values.customDeadline 
@@ -206,12 +206,27 @@ const handleSubmit = async (values: any) => {
 
     const result = await response.json();
     
-    // Hiển thị thông báo về email không tìm thấy (nếu có)
-    if (result.notFoundEmails && result.notFoundEmails.length > 0) {
-      message.warning(`Một số email không tìm thấy trong hệ thống: ${result.notFoundEmails.join(', ')}`);
+    if (result.problematicEmails && result.problematicEmails.length > 0) {
+      notification.warning({
+        message: 'Tải lên hoàn tất với một số lưu ý',
+        description: (
+          <div>
+            <p>Tài liệu đã được tải lên, nhưng các email sau không được cấp quyền (không tồn tại hoặc không phải sinh viên):</p>
+            <ul>
+              {result.problematicEmails.map((email: string) => <li key={email}>{email}</li>)}
+            </ul>
+          </div>
+        ),
+        duration: 0, // Hiển thị vĩnh viễn cho đến khi người dùng đóng
+        placement: 'topRight',
+      });
+    } else {
+      notification.success({
+        message: 'Tải lên thành công!',
+        description: 'Tài liệu của bạn đã được xử lý và lưu trữ an toàn.',
+        placement: 'topRight',
+      });
     }
-    
-    message.success('Tài liệu đã được tải lên thành công!');
 
     form.resetFields();
     setFileList([]);

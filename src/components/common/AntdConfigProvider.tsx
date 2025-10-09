@@ -1,5 +1,5 @@
 'use client';
-import { ConfigProvider } from 'antd';
+import { App, ConfigProvider } from 'antd';
 import { ReactNode } from 'react';
 
 // Minimal theme configuration for faster loading
@@ -39,7 +39,9 @@ export default function AntdConfigProvider({ children }: AntdConfigProviderProps
       // Disable motion for faster rendering
       componentSize="middle"
     >
+      <App>
       {children}
+      </App>
     </ConfigProvider>
   );
 }

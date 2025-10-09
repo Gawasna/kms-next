@@ -48,7 +48,7 @@ export default function NotificationBox() {
     return (
       <div className="notification-box p-4 border rounded-lg bg-white shadow-sm">
         <div className="flex justify-center items-center h-40">
-          <Spin tip="Loading notifications..." />
+          <Spin tip="Loading notifications..." fullscreen />
         </div>
       </div>
     );

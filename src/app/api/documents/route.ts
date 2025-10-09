@@ -134,16 +134,17 @@ export async function POST(req: NextRequest) {
       });
 
       // 5. Xử lý và tạo các quyền truy cập đặc biệt
+      let problematicEmails: string[] = [];
       if (accessLevel === 'STUDENT_ONLY' && permissions && permissions.emails.length > 0) {
+        const lowercasedEmails = permissions.emails.map(e => e.toLowerCase());
         const usersToGrantAccess = await tx.user.findMany({
           where: {
-            email: { in: permissions.emails },
+            email: { in: lowercasedEmails },
             role: 'STUDENT' // Đảm bảo chỉ chia sẻ cho sinh viên
           },
           select: { id: true, email: true },
         });
 
-        // Tính toán ngày hết hạn
         let expiresAt: Date | null = null;
         const { option, dates } = permissions.deadline;
         if (option !== 'none') {
@@ -151,37 +152,39 @@ export async function POST(req: NextRequest) {
           if (option === '30d') expiresAt.setDate(expiresAt.getDate() + 30);
           else if (option === '60d') expiresAt.setDate(expiresAt.getDate() + 60);
           else if (option === '90d') expiresAt.setDate(expiresAt.getDate() + 90);
-          else if (option === 'custom' && dates) {
+          else if (option === 'custom' && dates && dates.length > 1) {
             // Lấy ngày cuối cùng của RangePicker làm ngày hết hạn
             expiresAt = new Date(dates[1]);
+          } else {
+            expiresAt = null; // Reset nếu option là custom nhưng không có date
           }
         }
 
-        const permissionData = usersToGrantAccess.map(user => ({
-          knowledgeEntryId: newEntry.id,
-          userId: user.id,
-          expiresAt: expiresAt,
-        }));
+        if (usersToGrantAccess.length > 0) {
+          const permissionData = usersToGrantAccess.map(user => ({
+            knowledgeEntryId: newEntry.id,
+            userId: user.id,
+            expiresAt: expiresAt,
+          }));
 
-        if (permissionData.length > 0) {
           await tx.accessPermission.createMany({
             data: permissionData,
+            skipDuplicates: true, // Bỏ qua nếu quyền đã tồn tại
           });
         }
 
-        // (Optional) Trả về thông tin email không hợp lệ
-        const foundEmails = usersToGrantAccess.map(u => u.email);
-        const notFoundEmails = permissions.emails.filter(email => !foundEmails.includes(email));
-        // Bạn có thể thêm notFoundEmails vào response trả về
+        // Xác định các email không tìm thấy hoặc không phải là sinh viên
+        const foundEmails = usersToGrantAccess.map(u => u.email!.toLowerCase());
+        problematicEmails = lowercasedEmails.filter(email => !foundEmails.includes(email));
       }
 
-      return updatedEntry;
+      return { updatedEntry, problematicEmails };
     });
 
     return NextResponse.json({
       message: 'Tải lên và tạo tài liệu thành công!',
-      entry: result,
-      //notFoundEmails: notFoundEmails.length > 0 ? notFoundEmails : undefined
+      entry: result.updatedEntry,
+      problematicEmails: result.problematicEmails.length > 0 ? result.problematicEmails : undefined
     }, { status: 201 });
 
 
